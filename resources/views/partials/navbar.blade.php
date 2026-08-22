@@ -1,0 +1,87 @@
+<nav class="tradim-navbar">
+
+    <div class="tradim-navbar-left">
+
+        <button class="sidebar-toggle" id="sidebarToggle" type="button">
+            <i class="bi bi-list"></i>
+        </button>
+
+
+        <a href="{{ route('home') }}" class="tradim-logo">
+
+            <span class="logo-symbol">
+                ∞
+            </span>
+
+            <span class="logo-text">
+                TRADIM
+            </span>
+
+        </a>
+
+    </div>
+
+
+
+    <div class="tradim-search-wrapper">
+
+        <form action="#" method="GET" class="tradim-search-form">
+
+            <input type="search" name="q" placeholder="Search videos, creators..." autocomplete="off">
+
+            <button type="submit">
+                <i class="bi bi-search"></i>
+            </button>
+
+        </form>
+
+
+        <button class="voice-search" type="button">
+            <i class="bi bi-mic-fill"></i>
+        </button>
+
+    </div>
+
+
+
+    <div class="tradim-navbar-right">
+
+
+        <a href="#" class="nav-action create-action">
+
+            <i class="bi bi-plus-lg"></i>
+
+            <span>
+                Create
+            </span>
+
+        </a>
+
+
+        <a href="#" class="nav-action">
+            <i class="bi bi-broadcast-pin"></i>
+        </a>
+
+
+        <a href="#" class="nav-action notification-action">
+
+            <i class="bi bi-bell"></i>
+
+            <span class="notification-dot">
+                3
+            </span>
+
+        </a>
+
+
+        <a href="#" class="nav-profile">
+
+            <div class="profile-avatar">
+                T
+            </div>
+
+        </a>
+
+    </div>
+
+</nav>
