@@ -27,17 +27,21 @@
 
         <form action="#" method="GET" class="tradim-search-form">
 
-            <input type="search" name="q" placeholder="Search videos, creators..." autocomplete="off">
+            <input type="search" name="q" placeholder="Search videos, creators...">
 
             <button type="submit">
+
                 <i class="bi bi-search"></i>
+
             </button>
 
         </form>
 
 
         <button class="voice-search" type="button">
+
             <i class="bi bi-mic-fill"></i>
+
         </button>
 
     </div>
@@ -47,40 +51,80 @@
     <div class="tradim-navbar-right">
 
 
-        <a href="#" class="nav-action create-action">
+        @auth
 
-            <i class="bi bi-plus-lg"></i>
+                <!-- CREATE -->
 
-            <span>
-                Create
-            </span>
+                <a href="#" class="nav-action create-action">
 
-        </a>
+                    <i class="bi bi-plus-lg"></i>
 
+                    <span>
+                        Create
+                    </span>
 
-        <a href="#" class="nav-action">
-            <i class="bi bi-broadcast-pin"></i>
-        </a>
-
-
-        <a href="#" class="nav-action notification-action">
-
-            <i class="bi bi-bell"></i>
-
-            <span class="notification-dot">
-                3
-            </span>
-
-        </a>
+                </a>
 
 
-        <a href="#" class="nav-profile">
+                <!-- NOTIFICATION -->
 
-            <div class="profile-avatar">
-                T
-            </div>
+                <a href="#" class="nav-action notification-action">
 
-        </a>
+                    <i class="bi bi-bell"></i>
+
+                    <span class="notification-dot">
+                        3
+                    </span>
+
+                </a>
+
+
+                <!-- PROFILE -->
+
+                <a href="{{ route('account') }}" class="nav-profile">
+
+                    <div class="profile-avatar">
+
+                        {{ strtoupper(
+                substr(Auth::user()->name, 0, 1)
+            ) }}
+
+                    </div>
+
+                </a>
+
+
+        @else
+
+
+            <!-- LOGIN -->
+
+            <a href="{{ route('login') }}" class="nav-action">
+
+                <i class="bi bi-box-arrow-in-right"></i>
+
+                <span>
+                    Sign In
+                </span>
+
+            </a>
+
+
+            <!-- REGISTER -->
+
+            <a href="{{ route('register') }}" class="nav-action create-action">
+
+                <i class="bi bi-person-plus"></i>
+
+                <span>
+                    Join Tradim
+                </span>
+
+            </a>
+
+
+        @endauth
+
 
     </div>
 
