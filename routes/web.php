@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CreatorController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\VideoController;
 
 
@@ -12,11 +13,10 @@ use App\Http\Controllers\VideoController;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', function () {
-
-    return view('home');
-
-})->name('home');
+Route::get(
+    '/',
+    [HomeController::class, 'index']
+)->name('home');
 
 
 
@@ -71,6 +71,20 @@ Route::post(
     '/logout',
     [AuthController::class, 'logout']
 )->name('logout');
+
+
+
+
+/*
+|--------------------------------------------------------------------------
+| Watch Video
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/watch/{slug}',
+    [VideoController::class, 'show']
+)->name('videos.show');
 
 
 

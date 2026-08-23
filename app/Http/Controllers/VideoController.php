@@ -6,8 +6,7 @@ use App\Models\Category;
 use App\Models\Video;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
-
+use Illuminate\Support\Facades\Hash;
 
 class VideoController extends Controller
 {
@@ -32,14 +31,12 @@ class VideoController extends Controller
                 );
         }
 
-
         $categories = Category::where(
             'is_active',
             true
         )
             ->orderBy('sort_order')
             ->get();
-
 
         return view(
             'videos.create',
@@ -63,9 +60,7 @@ class VideoController extends Controller
 
         $channel = $user->channel;
 
-
         if (!$channel) {
-
             return redirect()
                 ->route('creator.channel.create')
                 ->with(
@@ -73,7 +68,6 @@ class VideoController extends Controller
                     'Create your channel first.'
                 );
         }
-
 
         $validated = $request->validate([
 
@@ -99,7 +93,7 @@ class VideoController extends Controller
                 'required',
                 'file',
                 'mimetypes:video/mp4,video/webm,video/quicktime,video/x-msvideo',
-                'max:102400',
+                'max:131072',
             ],
 
             'thumbnail' => [
@@ -123,7 +117,7 @@ class VideoController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $slug = Str::slug(
+        $slug = \Illuminate\Support\Str::slug(
             $validated['title']
         );
 
@@ -131,14 +125,12 @@ class VideoController extends Controller
 
         $counter = 1;
 
-
         while (
             Video::where(
                 'slug',
                 $slug
             )->exists()
         ) {
-
             $slug =
                 $originalSlug .
                 '-' .
@@ -170,34 +162,13 @@ class VideoController extends Controller
 
         $thumbnailPath = null;
 
-
         if ($request->hasFile('thumbnail')) {
-
             $thumbnailPath = $request
                 ->file('thumbnail')
                 ->store(
                     'thumbnails',
                     'public'
                 );
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Video Status
-        |--------------------------------------------------------------------------
-        */
-
-        $status = 'published';
-
-        $publishedAt = now();
-
-
-        if (
-            $validated['visibility'] !== 'public'
-        ) {
-
-            $status = 'published';
         }
 
 
@@ -237,7 +208,7 @@ class VideoController extends Controller
                 $validated['visibility'],
 
             'status' =>
-                $status,
+                'published',
 
             'views_count' => 0,
 
@@ -248,14 +219,14 @@ class VideoController extends Controller
             'comments_count' => 0,
 
             'published_at' =>
-                $publishedAt,
+                now(),
 
         ]);
 
 
         /*
         |--------------------------------------------------------------------------
-        | Update Channel Counters
+        | Update Channel Video Count
         |--------------------------------------------------------------------------
         */
 
@@ -270,5 +241,117 @@ class VideoController extends Controller
                 'success',
                 'Video uploaded successfully!'
             );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Watch Video
+    |--------------------------------------------------------------------------
+    */
+
+    public function show(
+        string $slug
+    ) {
+        $video = Video::with([
+            'channel',
+            'category',
+            'user',
+        ])
+            ->where(
+                'slug',
+                $slug
+            )
+            ->where(
+                'status',
+                'published'
+            )
+            ->firstOrFail();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Visibility Protection
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $video->visibility === 'private'
+        ) {
+
+            if (
+                !Auth::check() ||
+                Auth::id() !== $video->user_id
+            ) {
+                abort(404);
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Increment View
+        |--------------------------------------------------------------------------
+        */
+
+        $sessionKey =
+            'video_viewed_' .
+            $video->id;
+
+
+        if (!session()->has($sessionKey)) {
+
+            $video->increment(
+                'views_count'
+            );
+
+
+            $video->channel->increment(
+                'total_views'
+            );
+
+
+            session()->put(
+                $sessionKey,
+                true
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Related Videos
+        |--------------------------------------------------------------------------
+        */
+
+        $relatedVideos = Video::with([
+            'channel',
+            'category',
+        ])
+            ->where(
+                'id',
+                '!=',
+                $video->id
+            )
+            ->where(
+                'status',
+                'published'
+            )
+            ->where(
+                'visibility',
+                'public'
+            )
+            ->latest('published_at')
+            ->take(12)
+            ->get();
+
+
+        return view(
+            'videos.show',
+            compact(
+                'video',
+                'relatedVideos'
+            )
+        );
     }
 }
