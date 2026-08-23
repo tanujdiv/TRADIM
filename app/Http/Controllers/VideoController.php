@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Channel;
+use App\Models\Like;
+use App\Models\Subscription;
 use App\Models\Video;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -354,4 +357,187 @@ class VideoController extends Controller
             )
         );
     }
+    /*
+|--------------------------------------------------------------------------
+| Like / Dislike Video
+|--------------------------------------------------------------------------
+*/
+
+    public function like(Request $request, Video $video)
+    {
+        $user = Auth::user();
+
+        $type = $request->input('type');
+
+        if (!in_array($type, ['like', 'dislike'])) {
+            return back();
+        }
+
+        $existingLike = Like::where(
+            'user_id',
+            $user->id
+        )
+            ->where(
+                'video_id',
+                $video->id
+            )
+            ->first();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Same reaction -> Remove
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $existingLike &&
+            $existingLike->type === $type
+        ) {
+
+            $existingLike->delete();
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Change reaction
+        |--------------------------------------------------------------------------
+        */ elseif ($existingLike) {
+
+            $existingLike->update([
+                'type' => $type,
+            ]);
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | New reaction
+        |--------------------------------------------------------------------------
+        */ else {
+
+            Like::create([
+
+                'user_id' => $user->id,
+
+                'video_id' => $video->id,
+
+                'type' => $type,
+
+            ]);
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Recalculate Counts
+        |--------------------------------------------------------------------------
+        */
+
+        $video->update([
+
+            'likes_count' =>
+                $video->likes()
+                    ->where('type', 'like')
+                    ->count(),
+
+            'dislikes_count' =>
+                $video->likes()
+                    ->where('type', 'dislike')
+                    ->count(),
+
+        ]);
+
+
+        return back();
+    }
+
+    /*
+|--------------------------------------------------------------------------
+| Subscribe / Unsubscribe Channel
+|--------------------------------------------------------------------------
+*/
+
+    public function subscribe(
+        Request $request,
+        $channel
+    ) {
+        $user = Auth::user();
+
+        $channel = Channel::findOrFail(
+            $channel
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Creator cannot subscribe to own channel
+        |--------------------------------------------------------------------------
+        */
+
+        if ($channel->user_id === $user->id) {
+
+            return back();
+
+        }
+
+
+        $subscription =
+            Subscription::where(
+                'user_id',
+                $user->id
+            )
+                ->where(
+                    'channel_id',
+                    $channel->id
+                )
+                ->first();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Unsubscribe
+        |--------------------------------------------------------------------------
+        */
+
+        if ($subscription) {
+
+            $subscription->delete();
+
+            $channel->decrement(
+                'subscriber_count'
+            );
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Subscribe
+        |--------------------------------------------------------------------------
+        */ else {
+
+            Subscription::create([
+
+                'user_id' => $user->id,
+
+                'channel_id' => $channel->id,
+
+            ]);
+
+            $channel->increment(
+                'subscriber_count'
+            );
+
+        }
+
+
+        return back();
+    }
+
 }
+

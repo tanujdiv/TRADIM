@@ -4,49 +4,55 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Comment extends Model
 {
     use HasFactory;
 
-
     protected $fillable = [
-
-        'video_id',
         'user_id',
+        'video_id',
         'parent_id',
         'body',
-        'likes_count',
-        'is_edited',
-
+        'comment',
     ];
 
 
-    protected function casts(): array
+    /*
+    |--------------------------------------------------------------------------
+    | User
+    |--------------------------------------------------------------------------
+    */
+
+    public function user()
     {
-        return [
-
-            'is_edited' => 'boolean',
-
-        ];
+        return $this->belongsTo(
+            User::class
+        );
     }
 
 
-    public function video(): BelongsTo
+    /*
+    |--------------------------------------------------------------------------
+    | Video
+    |--------------------------------------------------------------------------
+    */
+
+    public function video()
     {
-        return $this->belongsTo(Video::class);
+        return $this->belongsTo(
+            Video::class
+        );
     }
 
 
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | Parent Comment
+    |--------------------------------------------------------------------------
+    */
 
-
-    public function parent(): BelongsTo
+    public function parent()
     {
         return $this->belongsTo(
             Comment::class,
@@ -55,7 +61,13 @@ class Comment extends Model
     }
 
 
-    public function replies(): HasMany
+    /*
+    |--------------------------------------------------------------------------
+    | Replies
+    |--------------------------------------------------------------------------
+    */
+
+    public function replies()
     {
         return $this->hasMany(
             Comment::class,

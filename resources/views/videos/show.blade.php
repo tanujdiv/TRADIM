@@ -24,7 +24,7 @@
             $video->thumbnail_path
         )
         : ''
-                            }}">
+                                                                                                }}">
 
                         <source src="{{ asset(
         'storage/' .
@@ -69,7 +69,7 @@
         ? $video->published_at
             ->diffForHumans()
         : 'Recently'
-                                }}
+                                                        }}
 
                         </span>
 
@@ -86,14 +86,14 @@
 
                         @if($video->channel->avatar)
 
-                                            <img src="{{ asset(
+                                                    <img src="{{ asset(
                                 'storage/' .
                                 $video->channel->avatar
                             ) }}" alt="{{ $video->channel->name }}">
 
                         @else
 
-                                            {{ strtoupper(
+                                                    {{ strtoupper(
                                 substr(
                                     $video->channel->name,
                                     0,
@@ -142,13 +142,37 @@
 
                         @if(Auth::id() !== $video->user_id)
 
-                            <button type="button" class="subscribe-btn">
+                                    <form method="POST" action="{{ route(
+                                'channels.subscribe',
+                                $video->channel->id
+                            ) }}">
 
-                                <i class="bi bi-bell"></i>
+                                        @csrf
 
-                                Subscribe
+                                        <button type="submit"
+                                            class="subscribe-btn
+                                                                                                                                                                                                                                                                                        {{ $isSubscribed
+                                ? 'subscribed'
+                                : ''
+                                                                                                                                                                                                                                                                                        }}">
 
-                            </button>
+                                            @if($isSubscribed)
+
+                                                <i class="bi bi-check-lg"></i>
+
+                                                Subscribed
+
+                                            @else
+
+                                                <i class="bi bi-bell"></i>
+
+                                                Subscribe
+
+                                            @endif
+
+                                        </button>
+
+                                    </form>
 
                         @endif
 
@@ -190,30 +214,129 @@
                 </div>
 
 
-                {{-- ACTIONS --}}
+                {{-- =====================================================
+                ACTIONS
+                ====================================================== --}}
+
+                @php
+
+                    $userLike = null;
+
+                    $isSubscribed = false;
+
+                    if (Auth::check()) {
+
+                        $userLike = $video->likes()
+                            ->where('user_id', Auth::id())
+                            ->first();
+
+                        // Fix: Check subscriber_id column if user_id does not exist, or safe relationship check
+                        $isSubscribed = $video->channel
+                            ->subscriptions()
+                            ->where(function ($query) {
+                                $query->where('user_id', Auth::id())
+                                      ->orWhere('subscriber_id', Auth::id());
+                            })
+                            ->exists();
+
+                    }
+
+                @endphp
+
 
                 <div class="watch-actions">
 
-                    <button type="button" class="watch-action">
 
-                        <i class="bi bi-hand-thumbs-up"></i>
+                    {{-- LIKE --}}
 
-                        {{ number_format(
-        $video->likes_count
-    ) }}
+                    @auth
 
-                    </button>
+                                    <form method="POST" action="{{ route(
+                            'videos.like',
+                            $video->id
+                        ) }}">
+
+                                        @csrf
+
+                                        <input type="hidden" name="type" value="like">
+
+                                        <button type="submit"
+                                            class="watch-action
+                                                                                                                                                                                                                                                                                        {{ $userLike?->type === 'like'
+                            ? 'active'
+                            : ''
+                                                                                                                                                                                                                                                                                        }}">
+
+                                            <i class="bi bi-hand-thumbs-up"></i>
+
+                                            {{ number_format(
+                            $video->likes_count
+                        ) }}
+
+                                        </button>
+
+                                    </form>
 
 
-                    <button type="button" class="watch-action">
+                                    {{-- DISLIKE --}}
 
-                        <i class="bi bi-hand-thumbs-down"></i>
+                                    <form method="POST" action="{{ route(
+                            'videos.like',
+                            $video->id
+                        ) }}">
 
-                    </button>
+                                        @csrf
+
+                                        <input type="hidden" name="type" value="dislike">
+
+                                        <button type="submit"
+                                            class="watch-action
+                                                                                                                                                                                                                                                                                        {{ $userLike?->type === 'dislike'
+                            ? 'active'
+                            : ''
+                                                                                                                                                                                                                                                                                        }}">
+
+                                            <i class="bi bi-hand-thumbs-down"></i>
+
+                                            {{ number_format(
+                            $video->dislikes_count
+                        ) }}
+
+                                        </button>
+
+                                    </form>
+
+                    @else
+
+                                    <a href="{{ route('login') }}" class="watch-action">
+
+                                        <i class="bi bi-hand-thumbs-up"></i>
+
+                                        {{ number_format(
+                            $video->likes_count
+                        ) }}
+
+                                    </a>
 
 
-                    <button type="button" class="watch-action"
-                        onclick="navigator.clipboard.writeText(window.location.href)">
+                                    <a href="{{ route('login') }}" class="watch-action">
+
+                                        <i class="bi bi-hand-thumbs-down"></i>
+
+                                    </a>
+
+                    @endauth
+
+
+                    {{-- SHARE --}}
+
+                    <button type="button" class="watch-action" onclick="
+                                                    navigator.clipboard.writeText(
+                                                        window.location.href
+                                                    );
+                                                    this.innerHTML =
+                                                        '<i class=\'bi bi-check-lg\'></i> Copied';
+                                                ">
 
                         <i class="bi bi-share"></i>
 
@@ -223,8 +346,9 @@
 
                 </div>
 
-
-                {{-- COMMENTS PLACEHOLDER --}}
+                {{-- =====================================================
+                COMMENTS
+                ====================================================== --}}
 
                 <div class="comments-box">
 
@@ -243,11 +367,18 @@
 
                     @auth
 
-                                    <div class="comment-input">
+                                    <form method="POST" action="{{ route(
+                            'comments.store',
+                            $video->id
+                        ) }}" class="comment-form">
 
-                                        <div class="comment-avatar">
+                                        @csrf
 
-                                            {{ strtoupper(
+                                        <div class="comment-input">
+
+                                            <div class="comment-avatar">
+
+                                                {{ strtoupper(
                             substr(
                                 Auth::user()->name,
                                 0,
@@ -255,19 +386,28 @@
                             )
                         ) }}
 
+                                            </div>
+
+
+                                            <textarea name="comment" rows="2" placeholder="Add a comment..." required></textarea>
+
                                         </div>
 
 
-                                        <input type="text" placeholder="Add a comment..." disabled>
+                                        <div class="comment-submit">
 
-                                    </div>
+                                            <button type="submit" class="btn-tradim">
 
+                                                <i class="bi bi-send"></i>
 
-                                    <p class="comment-note">
+                                                Comment
 
-                                        Comments system is coming in the next step.
+                                            </button>
 
-                                    </p>
+                                        </div>
+
+                                    </form>
+
 
                     @else
 
@@ -287,6 +427,109 @@
                         </div>
 
                     @endauth
+
+
+                    {{-- COMMENTS LIST --}}
+
+                    <div class="comments-list">
+
+                        @forelse(
+    $video->comments()
+        ->with('user')
+        ->whereNull('parent_id')
+        ->latest()
+        ->get()
+    as $comment
+)
+
+                                            <div class="comment-item">
+
+                                                <div class="comment-avatar">
+
+                                                    {{ strtoupper(
+                                substr(
+                                    $comment->user->name,
+                                    0,
+                                    1
+                                )
+                            ) }}
+
+                                                </div>
+
+
+                                                <div class="comment-content">
+
+                                                    <div class="comment-user">
+
+                                                        {{ $comment->user->name }}
+
+                                                        <span>
+
+                                                            {{ $comment->created_at
+                                ->diffForHumans()
+                                                                                                                        }}
+
+                                                        </span>
+
+                                                    </div>
+
+
+                                                    <p>
+                                                        {{ $comment->body }}
+                                                    </p>
+
+
+                                                    @auth
+
+                                                        @if(
+                                                                Auth::id() ===
+                                                                $comment->user_id
+                                                            )
+
+                                                            <form method="POST" action="{{ route(
+                                                                'comments.destroy',
+                                                                $comment->id
+                                                            ) }}">
+
+                                                                @csrf
+
+                                                                @method('DELETE')
+
+                                                                <button type="submit" class="delete-comment">
+
+                                                                    Delete
+
+                                                                </button>
+
+                                                            </form>
+
+                                                        @endif
+
+                                                    @endauth
+
+                                                </div>
+
+                                            </div>
+
+                        @empty
+
+                            <div class="no-comments">
+
+                                <i class="bi bi-chat-left-text"></i>
+
+                                <p>
+                                    No comments yet.
+                                </p>
+
+                                <span>
+                                    Be the first to start the conversation.
+                                </span>
+
+                            </div>
+
+                        @endforelse
+
+                    </div>
 
                 </div>
 
@@ -325,10 +568,10 @@
                                         <div class="related-thumbnail">
 
                                             @if(
-                                                                    $related->thumbnail_path
-                                                                )
+                                                    $related->thumbnail_path
+                                                )
 
-                                                                <img src="{{ asset(
+                                                <img src="{{ asset(
                                                     'storage/' .
                                                     $related->thumbnail_path
                                                 ) }}" alt="{{ $related->title }}">
@@ -376,7 +619,7 @@
                                 ->published_at
                                 ->diffForHumans()
                             : 'Recently'
-                                                                        }}
+                                                                                                }}
 
                                             </span>
 
@@ -405,8 +648,8 @@
 
     <style>
         /* =========================================================
-           WATCH PAGE
-        ========================================================= */
+                                                        WATCH PAGE
+                                                    ========================================================= */
 
         .tradim-watch {
 
@@ -416,8 +659,8 @@
 
 
         /* =========================================================
-           PLAYER
-        ========================================================= */
+                                                        PLAYER
+                                                    ========================================================= */
 
         .player-wrapper {
 
@@ -450,8 +693,8 @@
 
 
         /* =========================================================
-           VIDEO INFO
-        ========================================================= */
+                                                        VIDEO INFO
+                                                    ========================================================= */
 
         .watch-info {
 
@@ -489,8 +732,8 @@
 
 
         /* =========================================================
-           CHANNEL
-        ========================================================= */
+                                                        CHANNEL
+                                                    ========================================================= */
 
         .channel-bar {
 
@@ -614,8 +857,8 @@
 
 
         /* =========================================================
-           DESCRIPTION
-        ========================================================= */
+                                                        DESCRIPTION
+                                                    ========================================================= */
 
         .description-box {
 
@@ -655,8 +898,8 @@
 
 
         /* =========================================================
-           ACTIONS
-        ========================================================= */
+                                                        ACTIONS
+                                                    ========================================================= */
 
         .watch-actions {
 
@@ -702,8 +945,8 @@
 
 
         /* =========================================================
-           COMMENTS
-        ========================================================= */
+                                                        COMMENTS
+                                                    ========================================================= */
 
         .comments-box {
 
@@ -832,8 +1075,173 @@
 
 
         /* =========================================================
-           RELATED
-        ========================================================= */
+                        LIKE / DISLIKE ACTIVE
+                    ========================================================= */
+
+        .watch-actions form {
+            margin: 0;
+        }
+
+        .watch-action {
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .watch-action.active {
+            background: #31205f;
+            border-color: #7c3aed;
+            color: #c4b5fd;
+        }
+
+
+        /* =========================================================
+                        SUBSCRIBED
+                    ========================================================= */
+
+        .subscribe-btn.subscribed {
+            background: #272f42;
+            color: #ffffff !important;
+            border: 1px solid #3b465e;
+        }
+
+
+        /* =========================================================
+                        COMMENT FORM
+                    ========================================================= */
+
+        .comment-form {
+            margin-bottom: 30px;
+        }
+
+        .comment-input {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .comment-input textarea {
+            width: 100%;
+            resize: vertical;
+            min-height: 70px;
+
+            padding: 12px 15px;
+
+            background: #121a2b;
+
+            border: 1px solid #2a354c;
+
+            border-radius: 10px;
+
+            color: #ffffff;
+
+            outline: none;
+        }
+
+        .comment-input textarea:focus {
+            border-color: #7c3aed;
+        }
+
+        .comment-input textarea::placeholder {
+            color: #64748b;
+        }
+
+        .comment-submit {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+
+
+        /* =========================================================
+                        COMMENTS LIST
+                    ========================================================= */
+
+        .comments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .comment-item {
+            display: flex;
+            gap: 12px;
+        }
+
+        .comment-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .comment-user {
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .comment-user span {
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 400;
+            margin-left: 7px;
+        }
+
+        .comment-content p {
+            color: #cbd5e1;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .delete-comment {
+            margin-top: 8px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #ef4444;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .delete-comment:hover {
+            color: #f87171;
+        }
+
+
+        /* =========================================================
+                        NO COMMENTS
+                    ========================================================= */
+
+        .no-comments {
+            padding: 35px 20px;
+            text-align: center;
+
+            background: #121a2b;
+
+            border: 1px solid #273149;
+
+            border-radius: 12px;
+        }
+
+        .no-comments i {
+            color: #8b5cf6;
+            font-size: 30px;
+        }
+
+        .no-comments p {
+            color: #ffffff;
+            font-weight: 700;
+            margin: 10px 0 3px;
+        }
+
+        .no-comments span {
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        /* =========================================================
+                                                        RELATED
+                                                    ========================================================= */
 
         .related-header {
 
@@ -1014,8 +1422,8 @@
 
 
         /* =========================================================
-           RESPONSIVE
-        ========================================================= */
+                                                        RESPONSIVE
+                                                    ========================================================= */
 
         @media (max-width: 991px) {
 
@@ -1075,4 +1483,4 @@
         }
     </style>
 
-@endsection           
+@endsection

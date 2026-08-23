@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CommentController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CreatorController;
 use App\Http\Controllers\HomeController;
@@ -156,5 +157,34 @@ Route::middleware('auth')->group(function () {
         '/creator/videos',
         [VideoController::class, 'store']
     )->name('videos.store');
+
+    /*
+|--------------------------------------------------------------------------
+| Video Engagement
+|--------------------------------------------------------------------------
+*/
+
+    Route::post(
+        '/videos/{video}/like',
+        [VideoController::class, 'like']
+    )->name('videos.like');
+
+
+    Route::post(
+        '/channels/{channel}/subscribe',
+        [VideoController::class, 'subscribe']
+    )->name('channels.subscribe');
+
+
+    Route::post(
+        '/videos/{video}/comments',
+        [CommentController::class, 'store']
+    )->name('comments.store');
+
+
+    Route::delete(
+        '/comments/{comment}',
+        [CommentController::class, 'destroy']
+    )->name('comments.destroy');
 
 });
