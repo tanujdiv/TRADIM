@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CreatorController;
+use App\Http\Controllers\VideoController;
 
 
 /*
@@ -80,13 +82,65 @@ Route::post(
 
 Route::middleware('auth')->group(function () {
 
+    /*
+    |--------------------------------------------------------------------------
+    | Account
+    |--------------------------------------------------------------------------
+    */
+
     Route::get(
         '/account',
         function () {
-
             return view('account');
-
         }
     )->name('account');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Creator
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/creator',
+        [CreatorController::class, 'dashboard']
+    )->name('creator.dashboard');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Create Channel
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/creator/channel/create',
+        [CreatorController::class, 'createChannel']
+    )->name('creator.channel.create');
+
+
+    Route::post(
+        '/creator/channel',
+        [CreatorController::class, 'storeChannel']
+    )->name('creator.channel.store');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Video Upload
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/creator/videos/create',
+        [VideoController::class, 'create']
+    )->name('videos.create');
+
+
+    Route::post(
+        '/creator/videos',
+        [VideoController::class, 'store']
+    )->name('videos.store');
 
 });

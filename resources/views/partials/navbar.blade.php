@@ -55,7 +55,7 @@
 
                 <!-- CREATE -->
 
-                <a href="#" class="nav-action create-action">
+                <a href="{{ route('creator.dashboard') }}" class="nav-action create-action">
 
                     <i class="bi bi-plus-lg"></i>
 
