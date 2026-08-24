@@ -24,7 +24,7 @@
             $video->thumbnail_path
         )
         : ''
-                                                                                                }}">
+                                                                                                    }}">
 
                         <source src="{{ asset(
         'storage/' .
@@ -69,7 +69,7 @@
         ? $video->published_at
             ->diffForHumans()
         : 'Recently'
-                                                        }}
+                                                            }}
 
                         </span>
 
@@ -86,14 +86,14 @@
 
                         @if($video->channel->avatar)
 
-                                                    <img src="{{ asset(
+                                            <img src="{{ asset(
                                 'storage/' .
                                 $video->channel->avatar
                             ) }}" alt="{{ $video->channel->name }}">
 
                         @else
 
-                                                    {{ strtoupper(
+                                            {{ strtoupper(
                                 substr(
                                     $video->channel->name,
                                     0,
@@ -151,10 +151,10 @@
 
                                         <button type="submit"
                                             class="subscribe-btn
-                                                                                                                                                                                                                                                                                        {{ $isSubscribed
+                                                                                                                                                                                                                                                                                                            {{ $isSubscribed
                                 ? 'subscribed'
                                 : ''
-                                                                                                                                                                                                                                                                                        }}">
+                                                                                                                                                                                                                                                                                                            }}">
 
                                             @if($isSubscribed)
 
@@ -235,7 +235,7 @@
                             ->subscriptions()
                             ->where(function ($query) {
                                 $query->where('user_id', Auth::id())
-                                      ->orWhere('subscriber_id', Auth::id());
+                                    ->orWhere('subscriber_id', Auth::id());
                             })
                             ->exists();
 
@@ -262,10 +262,10 @@
 
                                         <button type="submit"
                                             class="watch-action
-                                                                                                                                                                                                                                                                                        {{ $userLike?->type === 'like'
+                                                                                                                                                                                                                                                                                                            {{ $userLike?->type === 'like'
                             ? 'active'
                             : ''
-                                                                                                                                                                                                                                                                                        }}">
+                                                                                                                                                                                                                                                                                                            }}">
 
                                             <i class="bi bi-hand-thumbs-up"></i>
 
@@ -291,10 +291,10 @@
 
                                         <button type="submit"
                                             class="watch-action
-                                                                                                                                                                                                                                                                                        {{ $userLike?->type === 'dislike'
+                                                                                                                                                                                                                                                                                                            {{ $userLike?->type === 'dislike'
                             ? 'active'
                             : ''
-                                                                                                                                                                                                                                                                                        }}">
+                                                                                                                                                                                                                                                                                                            }}">
 
                                             <i class="bi bi-hand-thumbs-down"></i>
 
@@ -331,12 +331,12 @@
                     {{-- SHARE --}}
 
                     <button type="button" class="watch-action" onclick="
-                                                    navigator.clipboard.writeText(
-                                                        window.location.href
-                                                    );
-                                                    this.innerHTML =
-                                                        '<i class=\'bi bi-check-lg\'></i> Copied';
-                                                ">
+                                                        navigator.clipboard.writeText(
+                                                            window.location.href
+                                                        );
+                                                        this.innerHTML =
+                                                            '<i class=\'bi bi-check-lg\'></i> Copied';
+                                                    ">
 
                         <i class="bi bi-share"></i>
 
@@ -434,13 +434,13 @@
                     <div class="comments-list">
 
                         @forelse(
-    $video->comments()
-        ->with('user')
-        ->whereNull('parent_id')
-        ->latest()
-        ->get()
-    as $comment
-)
+                                                $video->comments()
+                                                    ->with('user')
+                                                    ->whereNull('parent_id')
+                                                    ->latest()
+                                                    ->get()
+                                                as $comment
+                                            )
 
                                             <div class="comment-item">
 
@@ -467,7 +467,7 @@
 
                                                             {{ $comment->created_at
                                 ->diffForHumans()
-                                                                                                                        }}
+                                                                                                                                                }}
 
                                                         </span>
 
@@ -482,26 +482,26 @@
                                                     @auth
 
                                                         @if(
-                                                                Auth::id() ===
-                                                                $comment->user_id
-                                                            )
+                                                                                Auth::id() ===
+                                                                                $comment->user_id
+                                                                            )
 
-                                                            <form method="POST" action="{{ route(
+                                                                            <form method="POST" action="{{ route(
                                                                 'comments.destroy',
                                                                 $comment->id
                                                             ) }}">
 
-                                                                @csrf
+                                                                                @csrf
 
-                                                                @method('DELETE')
+                                                                                @method('DELETE')
 
-                                                                <button type="submit" class="delete-comment">
+                                                                                <button type="submit" class="delete-comment">
 
-                                                                    Delete
+                                                                                    Delete
 
-                                                                </button>
+                                                                                </button>
 
-                                                            </form>
+                                                                            </form>
 
                                                         @endif
 
@@ -568,10 +568,10 @@
                                         <div class="related-thumbnail">
 
                                             @if(
-                                                    $related->thumbnail_path
-                                                )
+                                                                    $related->thumbnail_path
+                                                                )
 
-                                                <img src="{{ asset(
+                                                                <img src="{{ asset(
                                                     'storage/' .
                                                     $related->thumbnail_path
                                                 ) }}" alt="{{ $related->title }}">
@@ -619,7 +619,7 @@
                                 ->published_at
                                 ->diffForHumans()
                             : 'Recently'
-                                                                                                }}
+                                                                                                                    }}
 
                                             </span>
 
@@ -648,8 +648,8 @@
 
     <style>
         /* =========================================================
-                                                        WATCH PAGE
-                                                    ========================================================= */
+                                                            WATCH PAGE
+                                                        ========================================================= */
 
         .tradim-watch {
 
@@ -659,8 +659,8 @@
 
 
         /* =========================================================
-                                                        PLAYER
-                                                    ========================================================= */
+                                                            PLAYER
+                                                        ========================================================= */
 
         .player-wrapper {
 
@@ -693,8 +693,8 @@
 
 
         /* =========================================================
-                                                        VIDEO INFO
-                                                    ========================================================= */
+                                                            VIDEO INFO
+                                                        ========================================================= */
 
         .watch-info {
 
@@ -732,8 +732,8 @@
 
 
         /* =========================================================
-                                                        CHANNEL
-                                                    ========================================================= */
+                                                            CHANNEL
+                                                        ========================================================= */
 
         .channel-bar {
 
@@ -857,8 +857,8 @@
 
 
         /* =========================================================
-                                                        DESCRIPTION
-                                                    ========================================================= */
+                                                            DESCRIPTION
+                                                        ========================================================= */
 
         .description-box {
 
@@ -898,8 +898,8 @@
 
 
         /* =========================================================
-                                                        ACTIONS
-                                                    ========================================================= */
+                                                            ACTIONS
+                                                        ========================================================= */
 
         .watch-actions {
 
@@ -945,8 +945,8 @@
 
 
         /* =========================================================
-                                                        COMMENTS
-                                                    ========================================================= */
+                                                            COMMENTS
+                                                        ========================================================= */
 
         .comments-box {
 
@@ -1075,8 +1075,8 @@
 
 
         /* =========================================================
-                        LIKE / DISLIKE ACTIVE
-                    ========================================================= */
+                            LIKE / DISLIKE ACTIVE
+                        ========================================================= */
 
         .watch-actions form {
             margin: 0;
@@ -1095,8 +1095,8 @@
 
 
         /* =========================================================
-                        SUBSCRIBED
-                    ========================================================= */
+                            SUBSCRIBED
+                        ========================================================= */
 
         .subscribe-btn.subscribed {
             background: #272f42;
@@ -1106,8 +1106,8 @@
 
 
         /* =========================================================
-                        COMMENT FORM
-                    ========================================================= */
+                            COMMENT FORM
+                        ========================================================= */
 
         .comment-form {
             margin-bottom: 30px;
@@ -1153,8 +1153,8 @@
 
 
         /* =========================================================
-                        COMMENTS LIST
-                    ========================================================= */
+                            COMMENTS LIST
+                        ========================================================= */
 
         .comments-list {
             display: flex;
@@ -1209,8 +1209,8 @@
 
 
         /* =========================================================
-                        NO COMMENTS
-                    ========================================================= */
+                            NO COMMENTS
+                        ========================================================= */
 
         .no-comments {
             padding: 35px 20px;
@@ -1240,8 +1240,8 @@
         }
 
         /* =========================================================
-                                                        RELATED
-                                                    ========================================================= */
+                                                            RELATED
+                                                        ========================================================= */
 
         .related-header {
 
@@ -1422,8 +1422,8 @@
 
 
         /* =========================================================
-                                                        RESPONSIVE
-                                                    ========================================================= */
+                                                            RESPONSIVE
+                                                        ========================================================= */
 
         @media (max-width: 991px) {
 
