@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Tradim - Watch, Create & Share')
+@section('title', 'Tradim - Watch. Create. Connect.')
 
 @section('content')
 
@@ -8,38 +8,7 @@
 
 
         {{-- =========================================================
-        CATEGORY BAR
-        ========================================================== --}}
-
-        <div class="category-scroll">
-
-            <a href="{{ route('home') }}" class="category-pill active">
-                <i class="bi bi-house-fill"></i>
-                All
-            </a>
-
-
-            @foreach($categories as $category)
-
-                <button type="button" class="category-pill">
-
-                    @if($category->icon)
-
-                        <i class="bi {{ $category->icon }}"></i>
-
-                    @endif
-
-                    {{ $category->name }}
-
-                </button>
-
-            @endforeach
-
-        </div>
-
-
-        {{-- =========================================================
-        HERO
+             HERO
         ========================================================== --}}
 
         <section class="tradim-hero">
@@ -50,80 +19,70 @@
 
                     <i class="bi bi-stars"></i>
 
-                    WELCOME TO TRADIM
+                    Welcome to Tradim
 
                 </span>
 
 
                 <h1>
 
-                    Watch.
-                    <span>Create.</span>
-                    Connect.
+                    Watch what you love.
+                    <br>
+
+                    <span>Create what matters.</span>
 
                 </h1>
 
 
                 <p>
 
-                    Discover amazing videos, follow your favourite
-                    creators and build your own audience on Tradim.
+                    Discover videos, creators and communities
+                    from around the world.
 
                 </p>
 
 
-                @guest
+                <div class="hero-actions">
 
-                    <div class="hero-buttons">
+                    <a
+                        href="#videos"
+                        class="hero-primary"
+                    >
 
-                        <a href="{{ route('register') }}" class="btn-tradim">
+                        <i class="bi bi-play-fill"></i>
+
+                        Explore Videos
+
+                    </a>
+
+
+                    @auth
+
+                        <a
+                            href="{{ route('creator.dashboard') }}"
+                            class="hero-secondary"
+                        >
+
+                            <i class="bi bi-camera-video"></i>
+
+                            Create
+
+                        </a>
+
+                    @else
+
+                        <a
+                            href="{{ route('register') }}"
+                            class="hero-secondary"
+                        >
 
                             <i class="bi bi-person-plus"></i>
 
-                            Start Creating
+                            Join Tradim
 
                         </a>
 
-
-                        <a href="{{ route('login') }}" class="btn-tradim-outline">
-
-                            Sign In
-
-                        </a>
-
-                    </div>
-
-                @else
-
-                    <div class="hero-buttons">
-
-                        <a href="{{ route('videos.create') }}" class="btn-tradim">
-
-                            <i class="bi bi-cloud-arrow-up"></i>
-
-                            Upload Video
-
-                        </a>
-
-
-                        <a href="{{ route('creator.dashboard') }}" class="btn-tradim-outline">
-
-                            Creator Studio
-
-                        </a>
-
-                    </div>
-
-                @endguest
-
-            </div>
-
-
-            <div class="hero-decoration">
-
-                <div class="hero-play">
-
-                    <i class="bi bi-play-fill"></i>
+                    @endauth
 
                 </div>
 
@@ -132,22 +91,157 @@
         </section>
 
 
+
         {{-- =========================================================
-        VIDEO SECTION
+             CATEGORIES
         ========================================================== --}}
 
-        <section class="video-section">
+        <section class="category-section">
 
-            <div class="section-header">
+            <div class="section-heading">
 
                 <div>
 
                     <h2>
-                        Latest Videos
+
+                        Explore
+
                     </h2>
 
                     <p>
+
+                        Find something you love
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="category-scroll">
+
+                @foreach($categories as $category)
+
+                                <a
+                                    href="{{ route(
+                        'home'
+                    ) }}?category={{ $category->id }}"
+                                    class="category-pill"
+                                >
+
+                                    <i class="bi bi-grid"></i>
+
+                                    {{ $category->name }}
+
+                                </a>
+
+                @endforeach
+
+            </div>
+
+        </section>
+
+
+
+        {{-- =========================================================
+             TRENDING
+        ========================================================== --}}
+
+        @if($trendingVideos->count())
+
+            <section class="video-section">
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <h2>
+
+                            <i class="bi bi-fire"></i>
+
+                            Trending
+
+                        </h2>
+
+                        <p>
+
+                            What's popular on Tradim
+
+                        </p>
+
+                    </div>
+
+
+                    <a
+                        href="#videos"
+                        class="view-all"
+                    >
+
+                        View all
+
+                        <i class="bi bi-arrow-right"></i>
+
+                    </a>
+
+                </div>
+
+
+                <div class="row g-4">
+
+                    @foreach(
+                            $trendingVideos->take(4)
+                            as $video
+                        )
+
+                            <div
+                                class="col-xl-3
+                                       col-lg-4
+                                       col-md-6"
+                            >
+
+                                @include(
+                                    'videos.partials.card',
+                                    [
+                                        'video' => $video
+                                    ]
+                                )
+
+                            </div>
+
+                    @endforeach
+
+                </div>
+
+            </section>
+
+        @endif
+
+
+
+        {{-- =========================================================
+             LATEST VIDEOS
+        ========================================================== --}}
+
+        <section
+            class="video-section"
+            id="videos"
+        >
+
+            <div class="section-heading">
+
+                <div>
+
+                    <h2>
+
+                        Latest Videos
+
+                    </h2>
+
+                    <p>
+
                         Fresh content from Tradim creators
+
                     </p>
 
                 </div>
@@ -157,146 +251,31 @@
 
             @if($videos->count())
 
-                <div class="video-grid">
+                <div class="row g-4">
 
                     @foreach($videos as $video)
 
-                            <a href="{{ route(
-                            'videos.show',
-                            $video->slug
-                        ) }}" class="video-card">
+                        <div
+                            class="col-xl-3
+                                   col-lg-4
+                                   col-md-6"
+                        >
 
-                                {{-- Thumbnail --}}
-
-                                <div class="video-thumbnail">
-
-                                    @if($video->thumbnail_path)
-
-                                                <img src="{{ asset(
-                                            'storage/' .
-                                            $video->thumbnail_path
-                                        ) }}" alt="{{ $video->title }}">
-
-                                    @else
-
-                                        <div class="default-thumbnail">
-
-                                            <i class="bi bi-play-circle-fill"></i>
-
-                                        </div>
-
-                                    @endif
-
-
-                                    <span class="video-duration">
-                                        {{ $video->duration
-                            ? gmdate(
-                                'H:i:s',
-                                $video->duration
+                            @include(
+                                'videos.partials.card',
+                                [
+                                    'video' => $video
+                                ]
                             )
-                            : 'NEW'
-                                                                                }}
-                                    </span>
 
-
-                                    <div class="thumbnail-overlay">
-
-                                        <i class="bi bi-play-fill"></i>
-
-                                    </div>
-
-                                </div>
-
-
-                                {{-- Video Info --}}
-
-                                <div class="video-info">
-
-                                    <div class="channel-avatar">
-
-                                        @if($video->channel->avatar)
-
-                                                        <img src="{{ asset(
-                                                'storage/' .
-                                                $video->channel->avatar
-                                            ) }}" alt="">
-
-                                        @else
-
-                                                        {{ strtoupper(
-                                                substr(
-                                                    $video->channel->name,
-                                                    0,
-                                                    1
-                                                )
-                                            ) }}
-
-                                        @endif
-
-                                    </div>
-
-
-                                    <div class="video-text">
-
-                                        <h3>
-
-                                            {{ $video->title }}
-
-                                        </h3>
-
-
-                                        <p class="channel-name">
-
-                                            {{ $video->channel->name }}
-
-                                            @if(
-                                                    $video->channel->is_verified
-                                                )
-
-                                                <i class="bi bi-patch-check-fill verified"></i>
-
-                                            @endif
-
-                                        </p>
-
-
-                                        <p class="video-meta">
-
-                                            {{ number_format(
-                            $video->views_count
-                        ) }}
-
-                                            views
-
-                                            <span>•</span>
-
-                                            {{ $video->published_at
-                            ? $video->published_at
-                                ->diffForHumans()
-                            : 'Recently'
-                                                                                    }}
-
-                                        </p>
-
-                                    </div>
-
-
-                                    <button type="button" class="video-menu" onclick="event.preventDefault()">
-
-                                        <i class="bi bi-three-dots-vertical"></i>
-
-                                    </button>
-
-                                </div>
-
-                            </a>
+                        </div>
 
                     @endforeach
 
                 </div>
 
 
-                {{-- Pagination --}}
+                {{-- PAGINATION --}}
 
                 <div class="tradim-pagination">
 
@@ -304,10 +283,9 @@
 
                 </div>
 
-
             @else
 
-                <div class="empty-videos">
+                <div class="empty-home">
 
                     <div class="empty-icon">
 
@@ -317,22 +295,32 @@
 
 
                     <h3>
+
                         No videos yet
+
                     </h3>
 
 
                     <p>
-                        Be the first creator to upload a video on Tradim.
+
+                        Be the first creator to upload
+                        a video on Tradim.
+
                     </p>
 
 
                     @auth
 
-                        <a href="{{ route('videos.create') }}" class="btn-tradim">
+                                    <a
+                                        href="{{ route(
+                            'creator.videos.create'
+                        ) }}"
+                                        class="hero-primary"
+                                    >
 
-                            Upload First Video
+                                        Upload Video
 
-                        </a>
+                                    </a>
 
                     @endauth
 
@@ -345,880 +333,519 @@
     </div>
 
 
+
     <style>
-        /* =========================================================
-               TRADIM HOME
-            ========================================================= */
 
-        .tradim-home {
+    /* =========================================================
+       HOME
+    ========================================================= */
 
-            color: #f8fafc;
+    .tradim-home {
 
-        }
+        color: #f8fafc;
 
-
-        /* =========================================================
-               CATEGORY BAR
-            ========================================================= */
-
-        .category-scroll {
-
-            display: flex;
-
-            gap: 10px;
-
-            overflow-x: auto;
-
-            padding: 5px 0 20px;
-
-            scrollbar-width: none;
-
-        }
-
-        .category-scroll::-webkit-scrollbar {
-
-            display: none;
-
-        }
+    }
 
 
-        .category-pill {
+    /* =========================================================
+       HERO
+    ========================================================= */
 
-            flex: 0 0 auto;
+    .tradim-hero {
 
-            border: 1px solid #263047;
+        position: relative;
 
-            background: #141a2a;
+        min-height: 330px;
 
-            color: #cbd5e1;
+        display: flex;
 
-            padding: 9px 16px;
+        align-items: center;
 
-            border-radius: 30px;
+        padding: 55px 45px;
 
-            text-decoration: none;
+        margin-bottom: 45px;
 
-            font-size: 14px;
+        overflow: hidden;
 
-            font-weight: 600;
+        border-radius: 20px;
 
-            transition: .2s;
+        background:
+            radial-gradient(
+                circle at 80% 20%,
+                rgba(124,58,237,.25),
+                transparent 35%
+            ),
+            radial-gradient(
+                circle at 20% 80%,
+                rgba(236,72,153,.15),
+                transparent 35%
+            ),
+            #0e1525;
 
-        }
+        border: 1px solid #273149;
 
-
-        .category-pill:hover {
-
-            color: #ffffff;
-
-            border-color: #7c3aed;
-
-            background: #1c1732;
-
-        }
-
-
-        .category-pill.active {
-
-            color: #ffffff;
-
-            border-color: #7c3aed;
-
-            background: linear-gradient(135deg,
-                    #7c3aed,
-                    #ec4899);
-
-        }
+    }
 
 
-        /* =========================================================
-               HERO
-            ========================================================= */
+    .tradim-hero::after {
+
+        content: "";
+
+        position: absolute;
+
+        width: 300px;
+
+        height: 300px;
+
+        right: -100px;
+
+        top: -100px;
+
+        border-radius: 50%;
+
+        border: 1px solid rgba(
+            139,
+            92,
+            246,
+            .25
+        );
+
+    }
+
+
+    .hero-content {
+
+        position: relative;
+
+        z-index: 2;
+
+        max-width: 700px;
+
+    }
+
+
+    .hero-badge {
+
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 7px;
+
+        padding: 7px 13px;
+
+        margin-bottom: 18px;
+
+        border-radius: 30px;
+
+        background: rgba(
+            124,
+            58,
+            237,
+            .15
+        );
+
+        border: 1px solid rgba(
+            124,
+            58,
+            237,
+            .3
+        );
+
+        color: #c4b5fd;
+
+        font-size: 12px;
+
+        font-weight: 700;
+
+    }
+
+
+    .hero-content h1 {
+
+        color: #ffffff;
+
+        font-size: 44px;
+
+        line-height: 1.12;
+
+        font-weight: 900;
+
+        margin: 0 0 15px;
+
+    }
+
+
+    .hero-content h1 span {
+
+        background: linear-gradient(
+            90deg,
+            #a78bfa,
+            #ec4899
+        );
+
+        -webkit-background-clip: text;
+
+        -webkit-text-fill-color: transparent;
+
+    }
+
+
+    .hero-content p {
+
+        color: #94a3b8;
+
+        font-size: 15px;
+
+        line-height: 1.7;
+
+        max-width: 580px;
+
+        margin-bottom: 25px;
+
+    }
+
+
+    .hero-actions {
+
+        display: flex;
+
+        gap: 10px;
+
+        flex-wrap: wrap;
+
+    }
+
+
+    .hero-primary,
+    .hero-secondary {
+
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        padding: 11px 18px;
+
+        border-radius: 10px;
+
+        text-decoration: none;
+
+        font-size: 14px;
+
+        font-weight: 700;
+
+    }
+
+
+    .hero-primary {
+
+        background: #7c3aed;
+
+        color: #ffffff !important;
+
+    }
+
+
+    .hero-primary:hover {
+
+        background: #6d28d9;
+
+        color: #ffffff !important;
+
+    }
+
+
+    .hero-secondary {
+
+        background: #1a2335;
+
+        color: #e2e8f0 !important;
+
+        border: 1px solid #334155;
+
+    }
+
+
+    .hero-secondary:hover {
+
+        border-color: #7c3aed;
+
+    }
+
+
+    /* =========================================================
+       SECTIONS
+    ========================================================= */
+
+    .video-section,
+    .category-section {
+
+        margin-bottom: 45px;
+
+    }
+
+
+    .section-heading {
+
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: center;
+
+        margin-bottom: 20px;
+
+    }
+
+
+    .section-heading h2 {
+
+        color: #ffffff;
+
+        font-size: 22px;
+
+        font-weight: 800;
+
+        margin: 0 0 4px;
+
+    }
+
+
+    .section-heading h2 i {
+
+        color: #f97316;
+
+    }
+
+
+    .section-heading p {
+
+        color: #64748b;
+
+        font-size: 12px;
+
+        margin: 0;
+
+    }
+
+
+    .view-all {
+
+        color: #a78bfa;
+
+        text-decoration: none;
+
+        font-size: 13px;
+
+        font-weight: 700;
+
+    }
+
+
+    .view-all:hover {
+
+        color: #c4b5fd;
+
+    }
+
+
+    /* =========================================================
+       CATEGORY
+    ========================================================= */
+
+    .category-scroll {
+
+        display: flex;
+
+        gap: 10px;
+
+        overflow-x: auto;
+
+        padding-bottom: 5px;
+
+    }
+
+
+    .category-scroll::-webkit-scrollbar {
+
+        height: 4px;
+
+    }
+
+
+    .category-pill {
+
+        flex: 0 0 auto;
+
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 7px;
+
+        padding: 9px 15px;
+
+        border-radius: 25px;
+
+        background: #151d2e;
+
+        border: 1px solid #273149;
+
+        color: #cbd5e1;
+
+        text-decoration: none;
+
+        font-size: 12px;
+
+        font-weight: 600;
+
+    }
+
+
+    .category-pill:hover {
+
+        color: #ffffff;
+
+        border-color: #7c3aed;
+
+        background: #1c2540;
+
+    }
+
+
+    /* =========================================================
+       PAGINATION
+    ========================================================= */
+
+    .tradim-pagination {
+
+        display: flex;
+
+        justify-content: center;
+
+        margin-top: 35px;
+
+    }
+
+
+    .tradim-pagination nav {
+
+        display: flex;
+
+        justify-content: center;
+
+    }
+
+
+    .tradim-pagination svg {
+
+        width: 18px;
+
+        height: 18px;
+
+    }
+
+
+    .tradim-pagination span,
+    .tradim-pagination a {
+
+        color: #cbd5e1 !important;
+
+    }
+
+
+    .tradim-pagination [aria-current="page"] span {
+
+        background: #7c3aed !important;
+
+        border-color: #7c3aed !important;
+
+        color: #ffffff !important;
+
+    }
+
+
+    /* =========================================================
+       EMPTY
+    ========================================================= */
+
+    .empty-home {
+
+        text-align: center;
+
+        padding: 70px 20px;
+
+        background: #111a2b;
+
+        border: 1px solid #273149;
+
+        border-radius: 16px;
+
+    }
+
+
+    .empty-icon {
+
+        width: 70px;
+
+        height: 70px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        margin: auto;
+
+        border-radius: 50%;
+
+        background: #1c2540;
+
+        color: #8b5cf6;
+
+        font-size: 30px;
+
+    }
+
+
+    .empty-home h3 {
+
+        color: #ffffff;
+
+        margin: 18px 0 7px;
+
+    }
+
+
+    .empty-home p {
+
+        color: #64748b;
+
+        margin-bottom: 20px;
+
+    }
+
+
+    @media (max-width: 768px) {
 
         .tradim-hero {
 
-            min-height: 310px;
-
-            border-radius: 24px;
-
-            padding: 55px;
-
-            margin-bottom: 45px;
-
-            position: relative;
-
-            overflow: hidden;
-
-            background:
-                radial-gradient(circle at 85% 30%,
-                    rgba(236, 72, 153, .25),
-                    transparent 35%),
-                radial-gradient(circle at 65% 70%,
-                    rgba(124, 58, 237, .25),
-                    transparent 40%),
-                #101728;
-
-            border: 1px solid #273149;
+            padding: 35px 25px;
 
         }
 
 
-        .hero-content {
+        .hero-content h1 {
 
-            position: relative;
-
-            z-index: 2;
-
-            max-width: 650px;
+            font-size: 32px;
 
         }
 
+    }
 
-        .hero-badge {
-
-            display: inline-flex;
-
-            align-items: center;
-
-            gap: 8px;
-
-            padding: 7px 13px;
-
-            border-radius: 20px;
-
-            color: #d8b4fe;
-
-            background: rgba(124, 58, 237, .15);
-
-            border: 1px solid rgba(167, 139, 250, .25);
-
-            font-size: 12px;
-
-            font-weight: 800;
-
-            letter-spacing: .7px;
-
-        }
-
-
-        .tradim-hero h1 {
-
-            margin-top: 18px;
-
-            font-size: clamp(38px, 5vw, 64px);
-
-            line-height: 1.05;
-
-            font-weight: 900;
-
-            color: #ffffff;
-
-        }
-
-
-        .tradim-hero h1 span {
-
-            background: linear-gradient(90deg,
-                    #a78bfa,
-                    #f472b6);
-
-            -webkit-background-clip: text;
-
-            -webkit-text-fill-color: transparent;
-
-        }
-
-
-        .tradim-hero p {
-
-            color: #aeb9cc;
-
-            font-size: 17px;
-
-            line-height: 1.7;
-
-            max-width: 590px;
-
-        }
-
-
-        .hero-buttons {
-
-            display: flex;
-
-            gap: 12px;
-
-            margin-top: 25px;
-
-        }
-
-
-        .btn-tradim {
-
-            display: inline-flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            gap: 8px;
-
-            border: 0;
-
-            border-radius: 10px;
-
-            padding: 12px 20px;
-
-            background: linear-gradient(135deg,
-                    #7c3aed,
-                    #ec4899);
-
-            color: #ffffff !important;
-
-            text-decoration: none;
-
-            font-weight: 700;
-
-            transition: .2s;
-
-        }
-
-
-        .btn-tradim:hover {
-
-            color: #ffffff !important;
-
-            transform: translateY(-1px);
-
-        }
-
-
-        .btn-tradim-outline {
-
-            display: inline-flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            gap: 8px;
-
-            border: 1px solid #39445d;
-
-            border-radius: 10px;
-
-            padding: 11px 20px;
-
-            background: #151c2d;
-
-            color: #e2e8f0 !important;
-
-            text-decoration: none;
-
-            font-weight: 700;
-
-        }
-
-
-        .btn-tradim-outline:hover {
-
-            color: #ffffff !important;
-
-            border-color: #7c3aed;
-
-        }
-
-
-        /* =========================================================
-               HERO PLAY
-            ========================================================= */
-
-        .hero-decoration {
-
-            position: absolute;
-
-            right: 10%;
-
-            top: 50%;
-
-            transform: translateY(-50%);
-
-        }
-
-
-        .hero-play {
-
-            width: 150px;
-
-            height: 150px;
-
-            border-radius: 50%;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            font-size: 65px;
-
-            color: #ffffff;
-
-            background: linear-gradient(135deg,
-                    #7c3aed,
-                    #ec4899);
-
-            box-shadow:
-                0 0 80px rgba(124, 58, 237, .4);
-
-        }
-
-
-        /* =========================================================
-               SECTION
-            ========================================================= */
-
-        .section-header {
-
-            display: flex;
-
-            justify-content: space-between;
-
-            align-items: center;
-
-            margin-bottom: 25px;
-
-        }
-
-
-        .section-header h2 {
-
-            color: #ffffff;
-
-            font-size: 28px;
-
-            font-weight: 800;
-
-            margin-bottom: 5px;
-
-        }
-
-
-        .section-header p {
-
-            color: #8491a7;
-
-            margin: 0;
-
-        }
-
-
-        /* =========================================================
-               VIDEO GRID
-            ========================================================= */
-
-        .video-grid {
-
-            display: grid;
-
-            grid-template-columns:
-                repeat(4,
-                    minmax(0, 1fr));
-
-            gap: 28px 18px;
-
-        }
-
-
-        .video-card {
-
-            color: inherit;
-
-            text-decoration: none;
-
-            min-width: 0;
-
-        }
-
-
-        .video-thumbnail {
-
-            height: 190px;
-
-            position: relative;
-
-            overflow: hidden;
-
-            border-radius: 12px;
-
-            background: #151c2d;
-
-        }
-
-
-        .video-thumbnail img {
-
-            width: 100%;
-
-            height: 100%;
-
-            object-fit: cover;
-
-            display: block;
-
-            transition: transform .35s;
-
-        }
-
-
-        .video-card:hover .video-thumbnail img {
-
-            transform: scale(1.04);
-
-        }
-
-
-        .default-thumbnail {
-
-            width: 100%;
-
-            height: 100%;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            color: #8b5cf6;
-
-            font-size: 50px;
-
-            background:
-                linear-gradient(135deg,
-                    #171d31,
-                    #252044);
-
-        }
-
-
-        .video-duration {
-
-            position: absolute;
-
-            right: 8px;
-
-            bottom: 8px;
-
-            padding: 4px 7px;
-
-            border-radius: 5px;
-
-            background: rgba(0, 0, 0, .8);
-
-            color: #ffffff;
-
-            font-size: 11px;
-
-            font-weight: 700;
-
-        }
-
-
-        .thumbnail-overlay {
-
-            position: absolute;
-
-            inset: 0;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            opacity: 0;
-
-            background: rgba(0, 0, 0, .35);
-
-            transition: .2s;
-
-        }
-
-
-        .thumbnail-overlay i {
-
-            width: 55px;
-
-            height: 55px;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            border-radius: 50%;
-
-            background: rgba(124, 58, 237, .95);
-
-            color: #ffffff;
-
-            font-size: 28px;
-
-        }
-
-
-        .video-card:hover .thumbnail-overlay {
-
-            opacity: 1;
-
-        }
-
-
-        /* =========================================================
-               VIDEO INFO
-            ========================================================= */
-
-        .video-info {
-
-            display: flex;
-
-            gap: 11px;
-
-            padding-top: 12px;
-
-            position: relative;
-
-        }
-
-
-        .channel-avatar {
-
-            flex: 0 0 38px;
-
-            width: 38px;
-
-            height: 38px;
-
-            border-radius: 50%;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            overflow: hidden;
-
-            background: linear-gradient(135deg,
-                    #7c3aed,
-                    #ec4899);
-
-            color: #ffffff;
-
-            font-size: 15px;
-
-            font-weight: 800;
-
-        }
-
-
-        .channel-avatar img {
-
-            width: 100%;
-
-            height: 100%;
-
-            object-fit: cover;
-
-        }
-
-
-        .video-text {
-
-            min-width: 0;
-
-            padding-right: 25px;
-
-        }
-
-
-        .video-text h3 {
-
-            color: #f8fafc;
-
-            font-size: 15px;
-
-            line-height: 1.4;
-
-            font-weight: 700;
-
-            margin: 0 0 6px;
-
-            display: -webkit-box;
-
-            -webkit-line-clamp: 2;
-
-            -webkit-box-orient: vertical;
-
-            overflow: hidden;
-
-        }
-
-
-        .channel-name {
-
-            color: #94a3b8;
-
-            font-size: 13px;
-
-            margin: 0 0 3px;
-
-        }
-
-
-        .video-meta {
-
-            color: #64748b;
-
-            font-size: 12px;
-
-            margin: 0;
-
-        }
-
-
-        .video-meta span {
-
-            margin: 0 4px;
-
-        }
-
-
-        .verified {
-
-            color: #60a5fa;
-
-        }
-
-
-        .video-menu {
-
-            position: absolute;
-
-            right: 0;
-
-            top: 10px;
-
-            background: transparent;
-
-            border: 0;
-
-            color: #64748b;
-
-            font-size: 18px;
-
-        }
-
-
-        .video-menu:hover {
-
-            color: #ffffff;
-
-        }
-
-
-        /* =========================================================
-               EMPTY
-            ========================================================= */
-
-        .empty-videos {
-
-            text-align: center;
-
-            padding: 80px 20px;
-
-            border-radius: 18px;
-
-            background: #101728;
-
-            border: 1px solid #273149;
-
-        }
-
-
-        .empty-icon {
-
-            width: 80px;
-
-            height: 80px;
-
-            margin: 0 auto 20px;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            border-radius: 50%;
-
-            background: #1d2540;
-
-            color: #8b5cf6;
-
-            font-size: 35px;
-
-        }
-
-
-        .empty-videos h3 {
-
-            color: #ffffff;
-
-        }
-
-
-        .empty-videos p {
-
-            color: #94a3b8;
-
-        }
-
-
-        /* =========================================================
-               PAGINATION
-            ========================================================= */
-
-        .tradim-pagination {
-
-            margin-top: 35px;
-
-        }
-
-
-        .tradim-pagination nav {
-
-            display: flex;
-
-            justify-content: center;
-
-        }
-
-
-        .tradim-pagination .pagination {
-
-            gap: 6px;
-
-        }
-
-
-        .tradim-pagination .page-link {
-
-            background: #151c2d;
-
-            border: 1px solid #2b354c;
-
-            color: #cbd5e1;
-
-            border-radius: 8px;
-
-        }
-
-
-        .tradim-pagination .page-item.active .page-link {
-
-            background: #7c3aed;
-
-            border-color: #7c3aed;
-
-            color: #ffffff;
-
-        }
-
-
-        .tradim-pagination .page-item.disabled .page-link {
-
-            background: #101624;
-
-            color: #475569;
-
-        }
-
-
-        /* =========================================================
-               RESPONSIVE
-            ========================================================= */
-
-        @media (max-width: 1200px) {
-
-            .video-grid {
-
-                grid-template-columns:
-                    repeat(3, minmax(0, 1fr));
-
-            }
-
-        }
-
-
-        @media (max-width: 900px) {
-
-            .video-grid {
-
-                grid-template-columns:
-                    repeat(2, minmax(0, 1fr));
-
-            }
-
-
-            .hero-decoration {
-
-                display: none;
-
-            }
-
-        }
-
-
-        @media (max-width: 600px) {
-
-            .tradim-hero {
-
-                padding: 30px 22px;
-
-            }
-
-
-            .tradim-hero h1 {
-
-                font-size: 38px;
-
-            }
-
-
-            .hero-buttons {
-
-                flex-direction: column;
-
-            }
-
-
-            .video-grid {
-
-                grid-template-columns: 1fr;
-
-            }
-
-
-            .video-thumbnail {
-
-                height: 220px;
-
-            }
-
-        }
     </style>
 
 @endsection

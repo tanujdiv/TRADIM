@@ -25,15 +25,12 @@
 
     <div class="tradim-search-wrapper">
 
-        <form action="#" method="GET" class="tradim-search-form">
+        <form method="GET" action="{{ route('search') }}" class="tradim-search-form">
 
-            <input type="search" name="q" placeholder="Search videos, creators...">
+            <i class="bi bi-search"></i>
 
-            <button type="submit">
-
-                <i class="bi bi-search"></i>
-
-            </button>
+            <input type="search" name="q" value="{{ request('q') }}" placeholder="Search videos, creators..."
+                autocomplete="off">
 
         </form>
 

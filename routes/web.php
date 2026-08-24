@@ -20,6 +20,11 @@ Route::get(
 )->name('home');
 
 
+Route::get(
+    '/search',
+    [HomeController::class, 'search']
+)->name('search');
+
 
 /*
 |--------------------------------------------------------------------------
