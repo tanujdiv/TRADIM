@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommentController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CreatorController;
+use App\Http\Controllers\CreatorVideoController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\VideoController;
 
@@ -191,5 +192,36 @@ Route::middleware('auth')->group(function () {
         '/comments/{comment}',
         [CommentController::class, 'destroy']
     )->name('comments.destroy');
+
+});
+
+
+Route::middleware('auth')->prefix('creator')->name('creator.')->group(function () {
+
+    /*
+    |--------------------------------------------------------------------------
+    | Creator Videos
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/videos',
+        [CreatorVideoController::class, 'index']
+    )->name('videos.index');
+
+    Route::get(
+        '/videos/{video}/edit',
+        [CreatorVideoController::class, 'edit']
+    )->name('videos.edit');
+
+    Route::put(
+        '/videos/{video}',
+        [CreatorVideoController::class, 'update']
+    )->name('videos.update');
+
+    Route::delete(
+        '/videos/{video}',
+        [CreatorVideoController::class, 'destroy']
+    )->name('videos.destroy');
 
 });
