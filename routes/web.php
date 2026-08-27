@@ -225,7 +225,12 @@ Route::middleware('auth')->prefix('creator')->name('creator.')->group(function (
 });
 
 
-// Public channel page
+   /*
+    |--------------------------------------------------------------------------
+    | Public Channel Page
+    |--------------------------------------------------------------------------
+    */
+
 Route::get('/channel/{handle}', [
     ChannelController::class,
     'show'
@@ -236,10 +241,25 @@ Route::post('/channels/{channel}/subscribe', [
     'subscribe'
 ])->name('channels.subscribe');
 
+   /*
+    |--------------------------------------------------------------------------
+    | Account Page
+    |--------------------------------------------------------------------------
+    */
+
 
 Route::middleware('auth')->get('/account', function () {
     return view('account');
 })->name('account');
+
+
+
+
+   /*
+    |--------------------------------------------------------------------------
+    | Search 
+    |--------------------------------------------------------------------------
+    */
 
 
 Route::get('/search', [
