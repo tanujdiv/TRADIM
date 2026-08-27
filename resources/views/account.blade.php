@@ -70,6 +70,39 @@
 
                             </a>
 
+                            @auth
+
+                                @if(Auth::user()->channel)
+
+                                                    <a href="{{ route(
+                                        'channels.show',
+                                        Auth::user()->channel->handle
+                                    ) }}" class="account-channel-btn">
+
+                                                        <i class="bi bi-tv"></i>
+
+                                                        View My Channel
+
+                                                        <i class="bi bi-arrow-right"></i>
+
+                                                    </a>
+
+                                @else
+
+                                    <a href="{{ route('creator.channel.create') }}" class="account-channel-btn">
+
+                                        <i class="bi bi-plus-circle"></i>
+
+                                        Create Channel
+
+                                        <i class="bi bi-arrow-right"></i>
+
+                                    </a>
+
+                                @endif
+
+                            @endauth
+
 
                             <form action="{{ route('logout') }}" method="POST" style="display:inline;">
 
@@ -200,6 +233,40 @@
 
 
     </div>
+
+
+<style>
+
+.account-channel-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 12px 18px;
+
+    border-radius: 10px;
+
+    background: #7c3aed;
+
+    color: #ffffff !important;
+
+    text-decoration: none;
+
+    font-weight: 700;
+
+    transition: .2s;
+}
+
+.account-channel-btn:hover {
+    background: #6d28d9;
+    transform: translateY(-1px);
+}
+
+.account-channel-btn i:last-child {
+    margin-left: 5px;
+}
+
+</style>
 
 
 @endsection

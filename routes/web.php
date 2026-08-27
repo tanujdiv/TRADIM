@@ -1,11 +1,13 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\CommentController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CreatorController;
 use App\Http\Controllers\CreatorVideoController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\VideoController;
 
 
@@ -21,10 +23,6 @@ Route::get(
 )->name('home');
 
 
-Route::get(
-    '/search',
-    [HomeController::class, 'search']
-)->name('search');
 
 
 /*
@@ -225,3 +223,26 @@ Route::middleware('auth')->prefix('creator')->name('creator.')->group(function (
     )->name('videos.destroy');
 
 });
+
+
+// Public channel page
+Route::get('/channel/{handle}', [
+    ChannelController::class,
+    'show'
+])->name('channels.show');
+
+Route::post('/channels/{channel}/subscribe', [
+    VideoController::class,
+    'subscribe'
+])->name('channels.subscribe');
+
+
+Route::middleware('auth')->get('/account', function () {
+    return view('account');
+})->name('account');
+
+
+Route::get('/search', [
+    SearchController::class,
+    'index'
+])->name('search');

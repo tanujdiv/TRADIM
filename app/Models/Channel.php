@@ -4,59 +4,131 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Channel extends Model
 {
     use HasFactory;
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Fillable
+    |--------------------------------------------------------------------------
+    */
+
     protected $fillable = [
 
         'user_id',
+
         'name',
-        'slug',
+
         'handle',
+
         'description',
+
         'avatar',
+
         'banner',
+
         'subscriber_count',
+
         'video_count',
+
         'total_views',
+
         'is_verified',
-        'is_active',
 
     ];
 
 
-    protected function casts(): array
+    /*
+    |--------------------------------------------------------------------------
+    | User
+    |--------------------------------------------------------------------------
+    */
+
+    public function user()
     {
-        return [
-
-            'is_verified' => 'boolean',
-
-            'is_active' => 'boolean',
-
-        ];
+        return $this->belongsTo(
+            User::class
+        );
     }
 
 
-    public function user(): BelongsTo
+    /*
+    |--------------------------------------------------------------------------
+    | Videos
+    |--------------------------------------------------------------------------
+    */
+
+    public function videos()
     {
-        return $this->belongsTo(User::class);
+        return $this->hasMany(
+            Video::class
+        );
     }
 
 
-    public function videos(): HasMany
-    {
-        return $this->hasMany(Video::class);
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | Subscriptions
+    |--------------------------------------------------------------------------
+    */
 
-
-    public function subscriptions(): HasMany
+    public function subscriptions()
     {
         return $this->hasMany(
             Subscription::class
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Likes
+    |--------------------------------------------------------------------------
+    */
+
+    public function likes()
+    {
+        return $this->hasMany(
+            Like::class
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Avatar URL
+    |--------------------------------------------------------------------------
+    */
+
+    public function getAvatarUrlAttribute()
+    {
+        if (!$this->avatar) {
+            return null;
+        }
+
+        return asset(
+            'storage/' . $this->avatar
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Banner URL
+    |--------------------------------------------------------------------------
+    */
+
+    public function getBannerUrlAttribute()
+    {
+        if (!$this->banner) {
+            return null;
+        }
+
+        return asset(
+            'storage/' . $this->banner
         );
     }
 }
