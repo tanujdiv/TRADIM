@@ -185,33 +185,101 @@ class VideoController extends Controller
     public function subscribe(Request $request, $channel)
     {
         $user = Auth::user();
+
         $channel = Channel::findOrFail($channel);
 
+        /*
+        |--------------------------------------------------------------------------
+        | Prevent Self Subscription
+        |--------------------------------------------------------------------------
+        */
+
         if ($channel->user_id === $user->id) {
-            return back()->with('error', 'You cannot subscribe to your own channel.');
+            return back()->with(
+                'error',
+                'You cannot subscribe to your own channel.'
+            );
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Find Existing Subscription
+        |--------------------------------------------------------------------------
+        */
 
         $subscription = Subscription::where('user_id', $user->id)
             ->where('channel_id', $channel->id)
             ->first();
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Unsubscribe
+        |--------------------------------------------------------------------------
+        */
+
         if ($subscription) {
+
             $subscription->delete();
 
+            /*
+             * Prevent negative subscriber count.
+             */
             if ($channel->subscriber_count > 0) {
                 $channel->decrement('subscriber_count');
             }
 
-            return back()->with('success', 'Unsubscribed successfully.');
+            return back()->with(
+                'success',
+                'Unsubscribed successfully.'
+            );
         }
 
-        Subscription::create([
-            'user_id' => $user->id,
-            'channel_id' => $channel->id,
-        ]);
 
-        $channel->increment('subscriber_count');
+        /*
+        |--------------------------------------------------------------------------
+        | Subscribe
+        |--------------------------------------------------------------------------
+        */
 
-        return back()->with('success', 'Subscribed successfully.');
+        try {
+
+            Subscription::create([
+                'user_id' => $user->id,
+                'channel_id' => $channel->id,
+            ]);
+
+            $channel->increment('subscriber_count');
+
+        } catch (\Illuminate\Database\QueryException $e) {
+
+            /*
+             * Unique constraint protects against duplicate subscriptions
+             * during concurrent requests.
+             *
+             * We don't expose database errors to the user.
+             */
+
+            $subscriptionExists = Subscription::where(
+                'user_id',
+                $user->id
+            )
+                ->where(
+                    'channel_id',
+                    $channel->id
+                )
+                ->exists();
+
+            if (!$subscriptionExists) {
+                throw $e;
+            }
+        }
+
+
+        return back()->with(
+            'success',
+            'Subscribed successfully.'
+        );
     }
 }
