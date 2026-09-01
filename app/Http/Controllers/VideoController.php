@@ -270,9 +270,7 @@ class VideoController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        if (
-            $video->visibility === 'private'
-        ) {
+        if ($video->visibility === 'private') {
 
             if (
                 !Auth::check() ||
@@ -289,25 +287,15 @@ class VideoController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $sessionKey =
-            'video_viewed_' .
-            $video->id;
-
+        $sessionKey = 'video_viewed_' . $video->id;
 
         if (!session()->has($sessionKey)) {
 
-            $video->increment(
-                'views_count'
-            );
+            $video->increment('views_count');
 
-            $video->channel->increment(
-                'total_views'
-            );
+            $video->channel->increment('total_views');
 
-            session()->put(
-                $sessionKey,
-                true
-            );
+            session()->put($sessionKey, true);
         }
 
 
@@ -315,45 +303,40 @@ class VideoController extends Controller
         |--------------------------------------------------------------------------
         | Related Videos
         |--------------------------------------------------------------------------
+        |
+        | IMPORTANT:
+        | Related videos ko abhi direct query kar rahe hain.
+        | Isse cached malformed data ka issue nahi hoga.
+        |
         */
 
-        $relatedVideos = Cache::remember(
-            'related_videos_' . $video->id,
-            now()->addMinutes(5),
-            function () use ($video) {
+        $relatedVideos = Video::with([
+            'channel',
+            'category',
+        ])
+            ->where('id', '!=', $video->id)
+            ->where('status', 'published')
+            ->where('visibility', 'public')
+            ->when(
+                $video->category_id,
+                function ($query) use ($video) {
 
-                return Video::with([
-                    'channel',
-                    'category',
-                ])
-                    ->where(
-                        'id',
-                        '!=',
-                        $video->id
-                    )
-                    ->where(
-                        'status',
-                        'published'
-                    )
-                    ->where(
-                        'visibility',
-                        'public'
-                    )
-                    ->when(
-                        $video->category_id,
-                        function ($query) use ($video) {
-                            $query->where(
-                                'category_id',
-                                $video->category_id
-                            );
-                        }
-                    )
-                    ->latest('published_at')
-                    ->take(12)
-                    ->get();
-            }
-        );
+                    $query->where(
+                        'category_id',
+                        $video->category_id
+                    );
+                }
+            )
+            ->latest('published_at')
+            ->take(12)
+            ->get();
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Return Watch Page
+        |--------------------------------------------------------------------------
+        */
 
         return view(
             'videos.show',
@@ -363,7 +346,6 @@ class VideoController extends Controller
             )
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
