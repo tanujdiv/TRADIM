@@ -4,34 +4,41 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Subscription extends Model
 {
     use HasFactory;
 
-
     protected $fillable = [
-
-        'subscriber_id',
+        'user_id',
         'channel_id',
-
     ];
 
+    /*
+    |--------------------------------------------------------------------------
+    | Subscriber / User
+    |--------------------------------------------------------------------------
+    */
 
-    public function subscriber(): BelongsTo
+    public function user()
     {
         return $this->belongsTo(
             User::class,
-            'subscriber_id'
+            'user_id'
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Channel
+    |--------------------------------------------------------------------------
+    */
 
-    public function channel(): BelongsTo
+    public function channel()
     {
         return $this->belongsTo(
-            Channel::class
+            Channel::class,
+            'channel_id'
         );
     }
 }

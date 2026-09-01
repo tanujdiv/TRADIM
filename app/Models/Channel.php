@@ -78,7 +78,8 @@ class Channel extends Model
     public function subscriptions()
     {
         return $this->hasMany(
-            Subscription::class
+            Subscription::class,
+            'channel_id'
         );
     }
 

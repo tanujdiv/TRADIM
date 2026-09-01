@@ -3,13 +3,12 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\CommentController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CreatorController;
 use App\Http\Controllers\CreatorVideoController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\VideoController;
-
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,13 +16,10 @@ use App\Http\Controllers\VideoController;
 |--------------------------------------------------------------------------
 */
 
-Route::get(
-    '/',
-    [HomeController::class, 'index']
-)->name('home');
-
-
-
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/watch/{slug}', [VideoController::class, 'show'])->name('videos.show');
+Route::get('/channel/{handle}', [ChannelController::class, 'show'])->name('channels.show');
+Route::get('/search', [SearchController::class, 'index'])->name('search');
 
 /*
 |--------------------------------------------------------------------------
@@ -31,238 +27,50 @@ Route::get(
 |--------------------------------------------------------------------------
 */
 
+Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+Route::post('/register', [AuthController::class, 'register']);
 
-// Register
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
 
-Route::get(
-    '/register',
-    [AuthController::class, 'showRegister']
-)->name('register');
-
-
-Route::post(
-    '/register',
-    [AuthController::class, 'register']
-);
-
-
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 /*
 |--------------------------------------------------------------------------
-| Login
-|--------------------------------------------------------------------------
-*/
-
-Route::get(
-    '/login',
-    [AuthController::class, 'showLogin']
-)->name('login');
-
-
-Route::post(
-    '/login',
-    [AuthController::class, 'login']
-);
-
-
-
-/*
-|--------------------------------------------------------------------------
-| Logout
-|--------------------------------------------------------------------------
-*/
-
-Route::post(
-    '/logout',
-    [AuthController::class, 'logout']
-)->name('logout');
-
-
-
-
-/*
-|--------------------------------------------------------------------------
-| Watch Video
-|--------------------------------------------------------------------------
-*/
-
-Route::get(
-    '/watch/{slug}',
-    [VideoController::class, 'show']
-)->name('videos.show');
-
-
-
-/*
-|--------------------------------------------------------------------------
-| Authenticated Routes
+| Authenticated User Routes
 |--------------------------------------------------------------------------
 */
 
 Route::middleware('auth')->group(function () {
+    Route::get('/account', function () {
+        return view('account');
+    })->name('account');
 
-    /*
-    |--------------------------------------------------------------------------
-    | Account
-    |--------------------------------------------------------------------------
-    */
+    // Video Engagement
+    Route::post('/videos/{video}/like', [VideoController::class, 'like'])->name('videos.like');
+    Route::post('/channels/{channel}/subscribe', [VideoController::class, 'subscribe'])->name('channels.subscribe');
+    Route::post('/videos/{video}/comments', [CommentController::class, 'store'])->name('comments.store');
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
-    Route::get(
-        '/account',
-        function () {
-            return view('account');
-        }
-    )->name('account');
+    // Channel Creation
+    Route::get('/creator/channel/create', [CreatorController::class, 'createChannel'])->name('creator.channel.create');
+    Route::post('/creator/channel', [CreatorController::class, 'storeChannel'])->name('creator.channel.store');
 
+    // Video Creation
+    Route::get('/creator/videos/create', [VideoController::class, 'create'])->name('videos.create');
+    Route::post('/creator/videos', [VideoController::class, 'store'])->name('videos.store');
+});
 
-    /*
-    |--------------------------------------------------------------------------
-    | Creator
-    |--------------------------------------------------------------------------
-    */
-
-    Route::get(
-        '/creator',
-        [CreatorController::class, 'dashboard']
-    )->name('creator.dashboard');
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Create Channel
-    |--------------------------------------------------------------------------
-    */
-
-    Route::get(
-        '/creator/channel/create',
-        [CreatorController::class, 'createChannel']
-    )->name('creator.channel.create');
-
-
-    Route::post(
-        '/creator/channel',
-        [CreatorController::class, 'storeChannel']
-    )->name('creator.channel.store');
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Video Upload
-    |--------------------------------------------------------------------------
-    */
-
-    Route::get(
-        '/creator/videos/create',
-        [VideoController::class, 'create']
-    )->name('videos.create');
-
-
-    Route::post(
-        '/creator/videos',
-        [VideoController::class, 'store']
-    )->name('videos.store');
-
-    /*
+/*
 |--------------------------------------------------------------------------
-| Video Engagement
+| Creator Studio Routes
 |--------------------------------------------------------------------------
 */
 
-    Route::post(
-        '/videos/{video}/like',
-        [VideoController::class, 'like']
-    )->name('videos.like');
-
-
-    Route::post(
-        '/channels/{channel}/subscribe',
-        [VideoController::class, 'subscribe']
-    )->name('channels.subscribe');
-
-
-    Route::post(
-        '/videos/{video}/comments',
-        [CommentController::class, 'store']
-    )->name('comments.store');
-
-
-    Route::delete(
-        '/comments/{comment}',
-        [CommentController::class, 'destroy']
-    )->name('comments.destroy');
-
-});
-
-
 Route::middleware('auth')->prefix('creator')->name('creator.')->group(function () {
-
-    /*
-    |--------------------------------------------------------------------------
-    | Creator Videos
-    |--------------------------------------------------------------------------
-    */
-
-    Route::get(
-        '/videos',
-        [CreatorVideoController::class, 'index']
-    )->name('videos.index');
-
-    Route::get(
-        '/videos/{video}/edit',
-        [CreatorVideoController::class, 'edit']
-    )->name('videos.edit');
-
-    Route::put(
-        '/videos/{video}',
-        [CreatorVideoController::class, 'update']
-    )->name('videos.update');
-
-    Route::delete(
-        '/videos/{video}',
-        [CreatorVideoController::class, 'destroy']
-    )->name('videos.destroy');
-
+    Route::get('/', [CreatorController::class, 'dashboard'])->name('dashboard');
+    Route::get('/videos', [CreatorVideoController::class, 'index'])->name('videos.index');
+    Route::get('/videos/{video}/edit', [CreatorVideoController::class, 'edit'])->name('videos.edit');
+    Route::put('/videos/{video}', [CreatorVideoController::class, 'update'])->name('videos.update');
+    Route::delete('/videos/{video}', [CreatorVideoController::class, 'destroy'])->name('videos.destroy');
 });
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | Public Channel Page
-    |--------------------------------------------------------------------------
-    */
-
-Route::get('/channel/{handle}', [
-    ChannelController::class,
-    'show'
-])->name('channels.show');
-
-Route::post('/channels/{channel}/subscribe', [
-    VideoController::class,
-    'subscribe'
-])->name('channels.subscribe');
-
-   /*
-    |--------------------------------------------------------------------------
-    | Account Page
-    |--------------------------------------------------------------------------
-    */
-
-
-Route::middleware('auth')->get('/account', function () {
-    return view('account');
-})->name('account');
-
-
-
-
-   /*
-    |--------------------------------------------------------------------------
-    | Search 
-    |--------------------------------------------------------------------------
-    */
-
-
-Route::get('/search', [
-    SearchController::class,
-    'index'
-])->name('search');

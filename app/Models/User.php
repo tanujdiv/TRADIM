@@ -104,11 +104,11 @@ class User extends Authenticatable
     |--------------------------------------------------------------------------
     */
 
-    public function subscriptions(): HasMany
+    public function subscriptions()
     {
         return $this->hasMany(
             Subscription::class,
-            'subscriber_id'
+            'user_id'
         );
     }
 }
