@@ -18,6 +18,73 @@ class HomeController extends Controller
     {
         /*
         |--------------------------------------------------------------------------
+        | Category
+        |--------------------------------------------------------------------------
+        */
+
+        $categoryId = $request->integer('category');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Latest Videos
+        |--------------------------------------------------------------------------
+        */
+
+        $latestVideos = Video::with([
+            'channel',
+            'category',
+        ])
+            ->where('status', 'published')
+            ->where('visibility', 'public')
+            ->when(
+                $categoryId,
+                function ($query) use ($categoryId) {
+                    $query->where(
+                        'category_id',
+                        $categoryId
+                    );
+                }
+            )
+            ->latest('published_at')
+            ->paginate(24)
+            ->withQueryString();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Trending Videos
+        |--------------------------------------------------------------------------
+        */
+
+        $trendingVideos = Video::with([
+            'channel',
+            'category',
+        ])
+            ->where('status', 'published')
+            ->where('visibility', 'public')
+            ->orderByDesc('views_count')
+            ->latest('published_at')
+            ->take(12)
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Popular Videos
+        |--------------------------------------------------------------------------
+        */
+
+        $popularVideos = Video::with([
+            'channel',
+            'category',
+        ])
+            ->where('status', 'published')
+            ->where('visibility', 'public')
+            ->orderByDesc('likes_count')
+            ->orderByDesc('views_count')
+            ->take(12)
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
         | Categories
         |--------------------------------------------------------------------------
         */
@@ -29,106 +96,15 @@ class HomeController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Videos Query
-        |--------------------------------------------------------------------------
-        */
-
-        $videoQuery = Video::with([
-            'channel',
-            'category',
-        ])
-            ->where(
-                'status',
-                'published'
-            )
-            ->where(
-                'visibility',
-                'public'
-            );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Category Filter
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            $request->filled('category')
-        ) {
-
-            $videoQuery->where(
-                'category_id',
-                $request->category
-            );
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Latest Videos
-        |--------------------------------------------------------------------------
-        */
-
-        $videos = $videoQuery
-            ->latest('published_at')
-            ->paginate(12)
-            ->withQueryString();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Trending Videos
-        |--------------------------------------------------------------------------
-        */
-
-        $trendingQuery = Video::with([
-            'channel',
-            'category',
-        ])
-            ->where(
-                'status',
-                'published'
-            )
-            ->where(
-                'visibility',
-                'public'
-            );
-
-
-        if (
-            $request->filled('category')
-        ) {
-
-            $trendingQuery->where(
-                'category_id',
-                $request->category
-            );
-
-        }
-
-
-        $trendingVideos = $trendingQuery
-            ->orderByDesc(
-                'views_count'
-            )
-            ->take(8)
-            ->get();
-
-
         return view(
             'home',
             compact(
+                'latestVideos',
+                'trendingVideos',
+                'popularVideos',
                 'categories',
-                'videos',
-                'trendingVideos'
+                'categoryId'
             )
         );
     }
-
-   
 }
