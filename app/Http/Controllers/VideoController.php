@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Channel;
 use App\Models\Like;
+use App\Models\Notification;
 use App\Models\Subscription;
 use App\Models\Video;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+
 
 class VideoController extends Controller
 {
@@ -252,6 +254,8 @@ class VideoController extends Controller
 
             $channel->increment('subscriber_count');
 
+
+
         } catch (\Illuminate\Database\QueryException $e) {
 
             /*
@@ -275,7 +279,18 @@ class VideoController extends Controller
                 throw $e;
             }
         }
-
+        
+        Notification::create([
+            'user_id' => $channel->user_id,
+            'actor_id' => $user->id,
+            'type' => 'subscriber',
+            'title' => 'New subscriber',
+            'message' => $user->name . ' subscribed to your channel.',
+            'url' => route(
+                'channels.show',
+                $channel->handle
+            ),
+        ]);
 
         return back()->with(
             'success',

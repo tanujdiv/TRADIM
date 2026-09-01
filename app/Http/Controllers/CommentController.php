@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Comment;
+use App\Models\Notification;
 use App\Models\Video;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -48,6 +49,24 @@ class CommentController extends Controller
             'body' => $validated['comment'],
             'comment' => $validated['comment'], // Populate both columns to fix DB constraint
         ]);
+
+
+        $video->load('channel');
+
+        if ($video->user_id !== Auth::id()) {
+
+            Notification::create([
+                'user_id' => $video->user_id,
+                'actor_id' => Auth::id(),
+                'type' => 'comment',
+                'title' => 'New comment on your video',
+                'message' => Auth::user()->name . ' commented on your video.',
+                'url' => route(
+                    'videos.show',
+                    $video->slug
+                ),
+            ]);
+        }
 
 
         /*

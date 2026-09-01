@@ -63,17 +63,30 @@
                 </a>
 
 
-                <!-- NOTIFICATION -->
+                @auth
 
-                <a href="#" class="nav-action notification-action">
+                    @php
+                        $unreadNotifications = Auth::user()
+                            ->notifications()
+                            ->where('is_read', false)
+                            ->count();
+                    @endphp
 
-                    <i class="bi bi-bell"></i>
+                    <a href="{{ route('notifications.index') }}" class="tradim-notification-bell" title="Notifications">
 
-                    <span class="notification-dot">
-                        3
-                    </span>
+                        <i class="bi bi-bell"></i>
 
-                </a>
+                        @if($unreadNotifications > 0)
+
+                            <span class="notification-badge">
+                                {{ $unreadNotifications > 99 ? '99+' : $unreadNotifications }}
+                            </span>
+
+                        @endif
+
+                    </a>
+
+                @endauth
 
 
                 <!-- PROFILE -->
@@ -126,3 +139,55 @@
     </div>
 
 </nav>
+
+<style>
+    .tradim-notification-bell {
+        position: relative;
+        width: 42px;
+        height: 42px;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        color: #cbd5e1;
+        text-decoration: none;
+
+        border-radius: 10px;
+    }
+
+    .tradim-notification-bell:hover {
+        background: #151c2d;
+        color: #ffffff;
+    }
+
+    .tradim-notification-bell i {
+        font-size: 19px;
+    }
+
+    .notification-badge {
+        position: absolute;
+
+        top: 2px;
+        right: 1px;
+
+        min-width: 18px;
+        height: 18px;
+
+        padding: 0 5px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 20px;
+
+        background: #ef4444;
+        color: #ffffff;
+
+        font-size: 9px;
+        font-weight: 800;
+
+        border: 2px solid #070b18;
+    }
+</style>

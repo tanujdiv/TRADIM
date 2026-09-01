@@ -70,6 +70,18 @@
 
                             </a>
 
+                            {{-- <a href="{{ route('notifications.index') }}" class="account-option">
+                                <i class="bi bi-bell"></i>
+
+                                <div>
+                                    <strong>Notifications</strong>
+                                    <span>View your latest notifications</span>
+                                </div>
+                            </a> --}}
+
+
+
+
                             @auth
 
                                 @if(Auth::user()->channel)
@@ -86,6 +98,8 @@
                                                         <i class="bi bi-arrow-right"></i>
 
                                                     </a>
+
+
 
                                 @else
 
@@ -235,38 +249,36 @@
     </div>
 
 
-<style>
+    <style>
+        .account-channel-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
 
-.account-channel-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
+            padding: 12px 18px;
 
-    padding: 12px 18px;
+            border-radius: 10px;
 
-    border-radius: 10px;
+            background: #7c3aed;
 
-    background: #7c3aed;
+            color: #ffffff !important;
 
-    color: #ffffff !important;
+            text-decoration: none;
 
-    text-decoration: none;
+            font-weight: 700;
 
-    font-weight: 700;
+            transition: .2s;
+        }
 
-    transition: .2s;
-}
+        .account-channel-btn:hover {
+            background: #6d28d9;
+            transform: translateY(-1px);
+        }
 
-.account-channel-btn:hover {
-    background: #6d28d9;
-    transform: translateY(-1px);
-}
-
-.account-channel-btn i:last-child {
-    margin-left: 5px;
-}
-
-</style>
+        .account-channel-btn i:last-child {
+            margin-left: 5px;
+        }
+    </style>
 
 
 @endsection

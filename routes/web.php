@@ -6,6 +6,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CreatorController;
 use App\Http\Controllers\CreatorVideoController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\VideoController;
 use Illuminate\Support\Facades\Route;
@@ -59,6 +60,32 @@ Route::middleware('auth')->group(function () {
     // Video Creation
     Route::get('/creator/videos/create', [VideoController::class, 'create'])->name('videos.create');
     Route::post('/creator/videos', [VideoController::class, 'store'])->name('videos.store');
+
+    /*
+|--------------------------------------------------------------------------
+| Notifications
+|--------------------------------------------------------------------------
+*/
+
+    Route::get(
+        '/notifications',
+        [NotificationController::class, 'index']
+    )->name('notifications.index');
+
+    Route::post(
+        '/notifications/{notification}/read',
+        [NotificationController::class, 'read']
+    )->name('notifications.read');
+
+    Route::post(
+        '/notifications/read-all',
+        [NotificationController::class, 'readAll']
+    )->name('notifications.readAll');
+
+    Route::delete(
+        '/notifications/{notification}',
+        [NotificationController::class, 'destroy']
+    )->name('notifications.destroy');
 });
 
 /*
