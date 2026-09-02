@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Notification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
 class NotificationController extends Controller
 {
@@ -14,31 +15,31 @@ class NotificationController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function index()
+    public function index(): View
     {
+        $userId = Auth::id();
+
         $notifications = Notification::query()
-            ->where('user_id', Auth::id())
+            ->where('user_id', $userId)
             ->with('actor')
             ->latest()
             ->paginate(20);
 
-        return view(
-            'notifications.index',
-            compact('notifications')
-        );
+        return view('notifications.index', compact('notifications'));
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Mark Single Notification As Read
+    | Mark One Notification As Read
     |--------------------------------------------------------------------------
     */
 
-    public function read(
-        Notification $notification
-    ): RedirectResponse {
-
-        $this->authorizeNotification($notification);
+    public function read(Notification $notification): RedirectResponse
+    {
+        // User sirf apni notification access kar sakta hai
+        if ($notification->user_id !== Auth::id()) {
+            abort(403);
+        }
 
         if (!$notification->is_read) {
             $notification->update([
@@ -48,22 +49,21 @@ class NotificationController extends Controller
         }
 
         if ($notification->url) {
-            return redirect()->to(
-                $notification->url
-            );
+            return redirect($notification->url);
         }
 
-        return back();
+        return redirect()->route('notifications.index');
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Mark All Notifications As Read
+    | Mark All As Read
     |--------------------------------------------------------------------------
     */
 
-    public function readAll(): RedirectResponse
+    public function markAllAsRead(): RedirectResponse
     {
+        // Notification model ke through direct update karne se IDE warning fix ho jati hai
         Notification::query()
             ->where('user_id', Auth::id())
             ->where('is_read', false)
@@ -72,10 +72,7 @@ class NotificationController extends Controller
                 'read_at' => now(),
             ]);
 
-        return back()->with(
-            'success',
-            'All notifications marked as read.'
-        );
+        return back()->with('success', 'All notifications marked as read.');
     }
 
     /*
@@ -84,33 +81,14 @@ class NotificationController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function destroy(
-        Notification $notification
-    ): RedirectResponse {
-
-        $this->authorizeNotification($notification);
+    public function destroy(Notification $notification): RedirectResponse
+    {
+        if ($notification->user_id !== Auth::id()) {
+            abort(403);
+        }
 
         $notification->delete();
 
-        return back()->with(
-            'success',
-            'Notification deleted.'
-        );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Security Check
-    |--------------------------------------------------------------------------
-    */
-
-    private function authorizeNotification(
-        Notification $notification
-    ): void {
-
-        abort_unless(
-            $notification->user_id === Auth::id(),
-            403
-        );
+        return back()->with('success', 'Notification deleted.');
     }
 }

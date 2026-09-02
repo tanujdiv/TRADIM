@@ -4,33 +4,24 @@
 
 @section('content')
 
-    <div class="tradim-notifications">
+    <div class="notification-page">
 
-        {{-- HEADER --}}
         <div class="notification-header">
 
             <div>
-                <h1>
-                    Notifications
-                </h1>
-
-                <p>
-                    Stay updated with activity on Tradim.
-                </p>
+                <h1>Notifications</h1>
+                <p>Stay updated with your Tradim activity.</p>
             </div>
 
+            @if($notifications->where('is_read', false)->count() > 0)
 
-            @if($notifications->count() > 0)
-
-                <form method="POST" action="{{ route('notifications.readAll') }}">
-
+                <form method="POST" action="{{ route('notifications.read-all') }}">
                     @csrf
 
                     <button type="submit" class="mark-all-btn">
                         <i class="bi bi-check2-all"></i>
                         Mark all as read
                     </button>
-
                 </form>
 
             @endif
@@ -38,128 +29,90 @@
         </div>
 
 
-        {{-- NOTIFICATIONS --}}
-
         <div class="notification-list">
 
             @forelse($notifications as $notification)
 
-                    <div class="notification-item
-                            {{ $notification->read_at ? 'read' : 'unread' }}">
+                <div class="notification-item
+                        {{ !$notification->is_read ? 'unread' : '' }}">
 
-                        {{-- ACTOR AVATAR --}}
+                    {{-- ACTOR --}}
+                    <div class="notification-avatar">
 
-                        <div class="notification-avatar">
+                        @if($notification->actor)
 
-                            @if($notification->actor)
+                            {{ strtoupper(substr($notification->actor->name, 0, 1)) }}
 
-                                        {{ strtoupper(
-                                    substr(
-                                        $notification->actor->name,
-                                        0,
-                                        1
-                                    )
-                                ) }}
+                        @else
 
-                            @else
-
-                                <i class="bi bi-bell"></i>
-
-                            @endif
-
-                        </div>
-
-
-                        {{-- CONTENT --}}
-
-                        <div class="notification-content">
-
-                            <div class="notification-title">
-
-                                {{ $notification->title }}
-
-                            </div>
-
-
-                            <div class="notification-message">
-
-                                {{ $notification->message }}
-
-                            </div>
-
-
-                            <div class="notification-time">
-
-                                {{ $notification->created_at->diffForHumans() }}
-
-                            </div>
-
-
-                            {{-- ACTIONS --}}
-
-                            <div class="notification-actions">
-
-                                @if(!$notification->read_at)
-
-                                                <form method="POST" action="{{ route(
-                                        'notifications.read',
-                                        $notification->id
-                                    ) }}">
-
-                                                    @csrf
-
-                                                    <button type="submit" class="notification-btn">
-                                                        Mark as read
-                                                    </button>
-
-                                                </form>
-
-                                @endif
-
-
-                                <form method="POST" action="{{ route(
-                    'notifications.destroy',
-                    $notification->id
-                ) }}">
-
-                                    @csrf
-
-                                    @method('DELETE')
-
-                                    <button type="submit" class="notification-delete">
-                                        Delete
-                                    </button>
-
-                                </form>
-
-                            </div>
-
-                        </div>
-
-
-                        {{-- UNREAD DOT --}}
-
-                        @if(!$notification->read_at)
-
-                            <span class="unread-dot"></span>
+                            <i class="bi bi-bell-fill"></i>
 
                         @endif
 
                     </div>
 
+
+                    {{-- CONTENT --}}
+                    <a href="{{ route('notifications.read', $notification->id) }}" class="notification-content">
+
+                        <div class="notification-title">
+
+                            @if($notification->type === 'video_like')
+
+                                <i class="bi bi-hand-thumbs-up-fill"></i>
+
+                            @elseif($notification->type === 'new_subscriber')
+
+                                <i class="bi bi-person-plus-fill"></i>
+
+                            @elseif($notification->type === 'video_comment')
+
+                                <i class="bi bi-chat-left-text-fill"></i>
+
+                            @else
+
+                                <i class="bi bi-bell-fill"></i>
+
+                            @endif
+
+                            <strong>
+                                {{ $notification->title }}
+                            </strong>
+
+                        </div>
+
+                        <p>
+                            {{ $notification->message }}
+                        </p>
+
+                        <span>
+                            {{ $notification->created_at->diffForHumans() }}
+                        </span>
+
+                    </a>
+
+
+                    {{-- DELETE --}}
+                    <form method="POST" action="{{ route('notifications.destroy', $notification->id) }}"
+                        class="notification-delete">
+                        @csrf
+                        @method('DELETE')
+
+                        <button type="submit" title="Delete notification">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+
+                    </form>
+
+                </div>
+
             @empty
 
-                <div class="notification-empty">
+                <div class="empty-notifications">
 
-                    <div class="empty-icon">
+                    <i class="bi bi-bell-slash"></i>
 
-                        <i class="bi bi-bell-slash"></i>
-
-                    </div>
-
-                    <h2>
-                        No notifications
-                    </h2>
+                    <h3>No notifications</h3>
 
                     <p>
                         You're all caught up.
@@ -172,14 +125,10 @@
         </div>
 
 
-        {{-- PAGINATION --}}
-
         @if($notifications->hasPages())
 
             <div class="notification-pagination">
-
                 {{ $notifications->links() }}
-
             </div>
 
         @endif
@@ -188,21 +137,11 @@
 
 
     <style>
-        /* =========================================================
-           NOTIFICATIONS
-        ========================================================= */
-
-        .tradim-notifications {
+        .notification-page {
             max-width: 900px;
             margin: 0 auto;
-            padding: 20px 0 50px;
             color: #f8fafc;
         }
-
-
-        /* =========================================================
-           HEADER
-        ========================================================= */
 
         .notification-header {
             display: flex;
@@ -213,32 +152,25 @@
         }
 
         .notification-header h1 {
-            color: #ffffff;
+            margin: 0 0 5px;
             font-size: 28px;
             font-weight: 800;
-            margin: 0 0 6px;
         }
 
         .notification-header p {
-            color: #8491a7;
-            font-size: 13px;
             margin: 0;
+            color: #64748b;
+            font-size: 14px;
         }
 
-
-        /* =========================================================
-           MARK ALL
-        ========================================================= */
-
         .mark-all-btn {
-            border: 1px solid #303b55;
+            border: 1px solid #303b53;
             background: #151c2d;
             color: #cbd5e1;
-            border-radius: 9px;
             padding: 10px 15px;
-            font-size: 13px;
-            font-weight: 700;
+            border-radius: 9px;
             cursor: pointer;
+            font-weight: 600;
         }
 
         .mark-all-btn:hover {
@@ -246,233 +178,142 @@
             color: #ffffff;
         }
 
-
-        /* =========================================================
-           LIST
-        ========================================================= */
-
         .notification-list {
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
 
-
-        /* =========================================================
-           ITEM
-        ========================================================= */
-
         .notification-item {
             position: relative;
-
             display: flex;
+            align-items: center;
             gap: 14px;
-
-            padding: 17px;
-
-            background: #10172a;
-
-            border: 1px solid #202a40;
-
+            padding: 16px;
             border-radius: 12px;
-
+            border: 1px solid #202a40;
+            background: #101827;
             transition: .2s;
         }
 
         .notification-item:hover {
-            border-color: #35415e;
+            border-color: #34415c;
+            background: #131d30;
         }
 
         .notification-item.unread {
-            background: #121a2d;
-            border-color: #303b58;
+            background: #151d31;
+            border-color: #3b4661;
         }
 
-
-        /* =========================================================
-           AVATAR
-        ========================================================= */
+        .notification-item.unread::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 14px;
+            bottom: 14px;
+            width: 3px;
+            border-radius: 5px;
+            background: #7c3aed;
+        }
 
         .notification-avatar {
-            width: 44px;
-            height: 44px;
-
-            flex: 0 0 44px;
-
+            width: 46px;
+            height: 46px;
+            flex: 0 0 46px;
             display: flex;
             align-items: center;
             justify-content: center;
-
             border-radius: 50%;
-
-            background: linear-gradient(135deg,
-                    #7c3aed,
-                    #ec4899);
-
+            background: #7c3aed;
             color: #ffffff;
-
             font-weight: 800;
         }
-
-
-        /* =========================================================
-           CONTENT
-        ========================================================= */
 
         .notification-content {
             flex: 1;
             min-width: 0;
+            text-decoration: none;
+            color: inherit;
         }
 
         .notification-title {
-            color: #ffffff;
-            font-size: 15px;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .notification-message {
-            color: #cbd5e1;
-            font-size: 13px;
-            line-height: 1.6;
-        }
-
-        .notification-time {
-            color: #64748b;
-            font-size: 11px;
-            margin-top: 7px;
-        }
-
-
-        /* =========================================================
-           ACTIONS
-        ========================================================= */
-
-        .notification-actions {
             display: flex;
-            gap: 10px;
-            margin-top: 10px;
+            align-items: center;
+            gap: 8px;
+            color: #ffffff;
+            font-size: 14px;
         }
 
-        .notification-actions form {
-            margin: 0;
-        }
-
-        .notification-btn,
-        .notification-delete {
-            border: 0;
-            background: transparent;
-            padding: 0;
-
-            font-size: 11px;
-            cursor: pointer;
-        }
-
-        .notification-btn {
+        .notification-title i {
             color: #a78bfa;
         }
 
-        .notification-btn:hover {
-            color: #c4b5fd;
-        }
-
-        .notification-delete {
-            color: #ef4444;
-        }
-
-        .notification-delete:hover {
-            color: #f87171;
-        }
-
-
-        /* =========================================================
-           UNREAD DOT
-        ========================================================= */
-
-        .unread-dot {
-            width: 8px;
-            height: 8px;
-
-            flex: 0 0 8px;
-
-            margin-top: 7px;
-
-            border-radius: 50%;
-
-            background: #8b5cf6;
-        }
-
-
-        /* =========================================================
-           EMPTY
-        ========================================================= */
-
-        .notification-empty {
-            padding: 70px 20px;
-
-            text-align: center;
-
-            background: #10172a;
-
-            border: 1px solid #202a40;
-
-            border-radius: 14px;
-        }
-
-        .empty-icon {
-            font-size: 42px;
-            color: #7c3aed;
-            margin-bottom: 12px;
-        }
-
-        .notification-empty h2 {
-            color: #ffffff;
-            font-size: 19px;
-            margin: 0 0 6px;
-        }
-
-        .notification-empty p {
-            color: #64748b;
-            margin: 0;
+        .notification-content p {
+            margin: 5px 0;
+            color: #cbd5e1;
             font-size: 13px;
         }
 
+        .notification-content span {
+            color: #64748b;
+            font-size: 11px;
+        }
 
-        /* =========================================================
-           PAGINATION
-        ========================================================= */
+        .notification-delete button {
+            border: 0;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .notification-delete button:hover {
+            color: #ef4444;
+        }
+
+        .empty-notifications {
+            text-align: center;
+            padding: 80px 20px;
+            border: 1px solid #202a40;
+            border-radius: 14px;
+            background: #101827;
+        }
+
+        .empty-notifications i {
+            font-size: 45px;
+            color: #7c3aed;
+        }
+
+        .empty-notifications h3 {
+            margin: 15px 0 5px;
+            color: #ffffff;
+        }
+
+        .empty-notifications p {
+            margin: 0;
+            color: #64748b;
+        }
 
         .notification-pagination {
             margin-top: 25px;
         }
 
-        .notification-pagination nav {
-            display: flex;
-            justify-content: center;
-        }
-
-
-        /* =========================================================
-           MOBILE
-        ========================================================= */
-
         @media (max-width: 600px) {
-
-            .tradim-notifications {
-                padding: 10px 0 30px;
-            }
 
             .notification-header {
                 align-items: flex-start;
                 flex-direction: column;
             }
 
-            .mark-all-btn {
-                width: 100%;
+            .notification-item {
+                align-items: flex-start;
             }
 
-            .notification-item {
-                padding: 14px;
+            .notification-avatar {
+                width: 40px;
+                height: 40px;
+                flex-basis: 40px;
             }
 
         }

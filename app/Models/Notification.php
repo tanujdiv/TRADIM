@@ -4,26 +4,29 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Notification extends Model
 {
     use HasFactory;
 
+    protected $table = 'notifications';
+
     protected $fillable = [
         'user_id',
-        'actor_id',
         'type',
         'title',
         'message',
-        'data',
+        'url',
+        'actor_id',
+        'is_read',
         'read_at',
     ];
 
     protected $casts = [
-        'data' => 'array',
+        'is_read' => 'boolean',
         'read_at' => 'datetime',
     ];
-
 
     /*
     |--------------------------------------------------------------------------
@@ -31,13 +34,10 @@ class Notification extends Model
     |--------------------------------------------------------------------------
     */
 
-    public function user()
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(
-            User::class
-        );
+        return $this->belongsTo(User::class);
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -45,25 +45,8 @@ class Notification extends Model
     |--------------------------------------------------------------------------
     */
 
-    public function actor()
+    public function actor(): BelongsTo
     {
-        return $this->belongsTo(
-            User::class,
-            'actor_id'
-        );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Read Status
-    |--------------------------------------------------------------------------
-    */
-
-    public function isRead(): bool
-    {
-        return !is_null(
-            $this->read_at
-        );
+        return $this->belongsTo(User::class, 'actor_id');
     }
 }

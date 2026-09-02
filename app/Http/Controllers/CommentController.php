@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Comment;
 use App\Models\Notification;
 use App\Models\Video;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,10 +17,8 @@ class CommentController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function store(
-        Request $request,
-        Video $video
-    ) {
+    public function store(Request $request, Video $video): RedirectResponse
+    {
         $user = Auth::user();
 
         $validated = $request->validate([
@@ -28,13 +27,11 @@ class CommentController extends Controller
                 'string',
                 'max:2000',
             ],
-
             'parent_id' => [
                 'nullable',
                 'exists:comments,id',
             ],
         ]);
-
 
         /*
         |--------------------------------------------------------------------------
@@ -47,31 +44,33 @@ class CommentController extends Controller
             'video_id' => $video->id,
             'parent_id' => $validated['parent_id'] ?? null,
             'body' => $validated['comment'],
-            'comment' => $validated['comment'], // Populate both columns to fix DB constraint
+            'comment' => $validated['comment'], // Database column constraint compatibility
         ]);
-
-
-        $video->load('channel');
-
-        if ($video->user_id !== Auth::id()) {
-
-            Notification::create([
-                'user_id' => $video->user_id,
-                'actor_id' => Auth::id(),
-                'type' => 'comment',
-                'title' => 'New comment on your video',
-                'message' => Auth::user()->name . ' commented on your video.',
-                'url' => route(
-                    'videos.show',
-                    $video->slug
-                ),
-            ]);
-        }
-
 
         /*
         |--------------------------------------------------------------------------
-        | Update Comment Count
+        | Notify Channel Owner
+        |--------------------------------------------------------------------------
+        */
+
+        $channelOwnerId = $video->channel?->user_id;
+
+        if ($channelOwnerId && $channelOwnerId !== $user->id) {
+            Notification::create([
+                'user_id' => $channelOwnerId,
+                'type' => 'video_comment',
+                'title' => 'New comment',
+                'message' => $user->name . ' commented on your video "' . $video->title . '"',
+                'url' => route('videos.show', $video->slug),
+                'actor_id' => $user->id,
+                'is_read' => false,
+                'read_at' => null,
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Update Comment Count (Top-level comments only)
         |--------------------------------------------------------------------------
         */
 
@@ -80,7 +79,6 @@ class CommentController extends Controller
                 ->whereNull('parent_id')
                 ->count(),
         ]);
-
 
         return back()->with(
             'success',
@@ -88,18 +86,15 @@ class CommentController extends Controller
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Delete Comment
     |--------------------------------------------------------------------------
     */
 
-    public function destroy(
-        Comment $comment
-    ) {
-        $user = Auth::user();
-
+    public function destroy(Comment $comment): RedirectResponse
+    {
+        $userId = Auth::id();
 
         /*
         |--------------------------------------------------------------------------
@@ -107,16 +102,13 @@ class CommentController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        if ($comment->user_id !== $user->id) {
+        if ($comment->user_id !== $userId) {
             abort(403);
         }
 
-
         $video = $comment->video;
 
-
         $comment->delete();
-
 
         /*
         |--------------------------------------------------------------------------
@@ -124,12 +116,13 @@ class CommentController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $video->update([
-            'comments_count' => $video->comments()
-                ->whereNull('parent_id')
-                ->count(),
-        ]);
-
+        if ($video) {
+            $video->update([
+                'comments_count' => $video->comments()
+                    ->whereNull('parent_id')
+                    ->count(),
+            ]);
+        }
 
         return back()->with(
             'success',

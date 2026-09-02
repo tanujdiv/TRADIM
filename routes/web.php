@@ -60,32 +60,26 @@ Route::middleware('auth')->group(function () {
     // Video Creation
     Route::get('/creator/videos/create', [VideoController::class, 'create'])->name('videos.create');
     Route::post('/creator/videos', [VideoController::class, 'store'])->name('videos.store');
-
-    /*
+});
+/*
 |--------------------------------------------------------------------------
 | Notifications
 |--------------------------------------------------------------------------
 */
 
-    Route::get(
-        '/notifications',
-        [NotificationController::class, 'index']
-    )->name('notifications.index');
+Route::middleware('auth')->group(function () {
 
-    Route::post(
-        '/notifications/{notification}/read',
-        [NotificationController::class, 'read']
-    )->name('notifications.read');
+    Route::get('/notifications', [NotificationController::class, 'index'])
+        ->name('notifications.index');
 
-    Route::post(
-        '/notifications/read-all',
-        [NotificationController::class, 'readAll']
-    )->name('notifications.readAll');
+    Route::get('/notifications/{notification}/read', [NotificationController::class, 'read'])
+        ->name('notifications.read');
 
-    Route::delete(
-        '/notifications/{notification}',
-        [NotificationController::class, 'destroy']
-    )->name('notifications.destroy');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])
+        ->name('notifications.read-all');
+
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])
+        ->name('notifications.destroy');
 });
 
 /*
