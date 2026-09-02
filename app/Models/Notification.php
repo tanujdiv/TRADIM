@@ -11,23 +11,23 @@ class Notification extends Model
 
     protected $fillable = [
         'user_id',
+        'actor_id',
         'type',
         'title',
         'message',
-        'url',
-        'actor_id',
-        'is_read',
+        'data',
         'read_at',
     ];
 
     protected $casts = [
-        'is_read' => 'boolean',
+        'data' => 'array',
         'read_at' => 'datetime',
     ];
 
+
     /*
     |--------------------------------------------------------------------------
-    | Receiver
+    | Notification Owner
     |--------------------------------------------------------------------------
     */
 
@@ -37,6 +37,7 @@ class Notification extends Model
             User::class
         );
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -49,6 +50,20 @@ class Notification extends Model
         return $this->belongsTo(
             User::class,
             'actor_id'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Read Status
+    |--------------------------------------------------------------------------
+    */
+
+    public function isRead(): bool
+    {
+        return !is_null(
+            $this->read_at
         );
     }
 }
