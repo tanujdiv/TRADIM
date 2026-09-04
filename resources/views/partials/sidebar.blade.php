@@ -50,6 +50,11 @@
 
             </a>
 
+            <a href="{{ route('feed.index') }}" class="sidebar-link">
+                <i class="bi bi-collection-play"></i>
+                <span>Subscriptions</span>
+            </a>
+
         </div>
 
 

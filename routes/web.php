@@ -5,6 +5,7 @@ use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CreatorController;
 use App\Http\Controllers\CreatorVideoController;
+use App\Http\Controllers\FeedController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SearchController;
@@ -64,7 +65,10 @@ Route::middleware('auth')->group(function () {
     //Track Watch Time
     Route::post('/videos/{video}/watch-time', [VideoController::class, 'trackWatch'])->name('videos.watch-time');
 
-    
+    //Subscription Feed
+
+    Route::get('/subscriptions', [FeedController::class, 'index'])->name('feed.index');
+    Route::get('/subscriptions/channels', [FeedController::class, 'channels'])->name('feed.channels');
 });
 /*
 |--------------------------------------------------------------------------

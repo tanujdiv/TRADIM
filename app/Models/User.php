@@ -2,20 +2,23 @@
 
 namespace App\Models;
 
+use App\Models\Channel;
+use App\Models\Comment;
+use App\Models\Like;
+use App\Models\Notification;
+use App\Models\Subscription;
+use App\Models\Video;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use App\Models\Channel;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-
     protected $fillable = [
-
         'name',
         'username',
         'email',
@@ -24,31 +27,21 @@ class User extends Authenticatable
         'bio',
         'role',
         'is_active',
-
     ];
-
 
     protected $hidden = [
-
         'password',
         'remember_token',
-
     ];
-
 
     protected function casts(): array
     {
         return [
-
             'email_verified_at' => 'datetime',
-
             'password' => 'hashed',
-
             'is_active' => 'boolean',
-
         ];
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -61,7 +54,6 @@ class User extends Authenticatable
         return $this->hasOne(Channel::class);
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Videos
@@ -72,7 +64,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(Video::class);
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -85,7 +76,6 @@ class User extends Authenticatable
         return $this->hasMany(Comment::class);
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Likes
@@ -97,21 +87,19 @@ class User extends Authenticatable
         return $this->hasMany(Like::class);
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Subscriptions
     |--------------------------------------------------------------------------
     */
 
-    public function subscriptions()
+    public function subscriptions(): HasMany
     {
         return $this->hasMany(
             Subscription::class,
             'user_id'
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -121,12 +109,17 @@ class User extends Authenticatable
 
     public function notifications(): HasMany
     {
-        return $this->hasMany(Notification::class, 'user_id');
+        return $this->hasMany(
+            Notification::class,
+            'user_id'
+        );
     }
 
     public function unreadNotifications(): HasMany
     {
-        return $this->hasMany(Notification::class, 'user_id')
-            ->where('is_read', false);
+        return $this->hasMany(
+            Notification::class,
+            'user_id'
+        )->where('is_read', false);
     }
 }
