@@ -60,6 +60,11 @@ Route::middleware('auth')->group(function () {
     // Video Creation
     Route::get('/creator/videos/create', [VideoController::class, 'create'])->name('videos.create');
     Route::post('/creator/videos', [VideoController::class, 'store'])->name('videos.store');
+
+    //Track Watch Time
+    Route::post('/videos/{video}/watch-time', [VideoController::class, 'trackWatch'])->name('videos.watch-time');
+
+    
 });
 /*
 |--------------------------------------------------------------------------

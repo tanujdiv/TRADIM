@@ -26,7 +26,7 @@
             {{-- MAIN VIDEO --}}
             <div class="col-xl-8 col-lg-8">
                 <div class="player-wrapper">
-                    <video class="tradim-player" controls playsinline preload="metadata"
+                    <video class="tradim-player" controls playsinline preload="metadata" id="tradimVideoPlayer"
                         poster="{{ $video->thumbnail_path ? asset('storage/' . $video->thumbnail_path) : '' }}">
                         <source src="{{ asset('storage/' . $video->video_path) }}" type="video/mp4">
                         Your browser does not support HTML5 video.
@@ -578,8 +578,8 @@
             flex: 0 0 155px;
             width: 155px;
             height: 88px;
-            overflow: hidden;
             border-radius: 9px;
+            overflow: hidden;
             background: #151c2d;
         }
 
@@ -673,4 +673,263 @@
         }
     </style>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const player = document.getElementById('tradimVideoPlayer');
+
+            if (!player) {
+                return;
+            }
+
+            const trackingUrl = @json(route('videos.watch-time', $video->id));
+            const csrfToken = @json(csrf_token());
+
+            let lastTime = 0;
+            let pendingSeconds = 0;
+            let sending = false;
+
+            /*
+            |--------------------------------------------------------------------------
+            | Calculate actual watched time
+            |--------------------------------------------------------------------------
+            */
+
+            player.addEventListener('play', function () {
+                lastTime = player.currentTime;
+            });
+
+            player.addEventListener('timeupdate', function () {
+
+                if (player.paused || player.ended) {
+                    lastTime = player.currentTime;
+                    return;
+                }
+
+                const currentTime = player.currentTime;
+
+                const difference = currentTime - lastTime;
+
+                /*
+                | Only count realistic playback movement.
+                | If user seeks from 10 sec to 500 sec,
+                | don't count 490 seconds as watched.
+                */
+
+                if (difference > 0 && difference <= 2) {
+                    pendingSeconds += difference;
+                }
+
+                lastTime = currentTime;
+            });
+
+            /*
+            |--------------------------------------------------------------------------
+            | Send watch time to server
+            |--------------------------------------------------------------------------
+            */
+
+            async function sendWatchTime(useBeacon = false) {
+
+                const seconds = Math.floor(pendingSeconds);
+
+                if (seconds <= 0 && !player.ended) {
+                    return;
+                }
+
+                /*
+                | Don't send more than 60 seconds in one request.
+                */
+
+                const secondsToSend = Math.min(seconds, 60);
+
+                if (secondsToSend <= 0 && !player.ended) {
+                    return;
+                }
+
+                const currentPosition = Math.floor(
+                    player.currentTime || 0
+                );
+
+                const completed = player.ended ? 1 : 0;
+
+                const formData = new FormData();
+
+                formData.append('_token', csrfToken);
+                formData.append(
+                    'watched_seconds',
+                    secondsToSend
+                );
+                formData.append(
+                    'last_position',
+                    currentPosition
+                );
+                formData.append(
+                    'completed',
+                    completed
+                );
+
+                /*
+                |--------------------------------------------------------------------------
+                | Beacon
+                |--------------------------------------------------------------------------
+                */
+
+                if (useBeacon && navigator.sendBeacon) {
+
+                    const sent = navigator.sendBeacon(
+                        trackingUrl,
+                        formData
+                    );
+
+                    if (sent) {
+                        pendingSeconds -= secondsToSend;
+                    }
+
+                    return;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Prevent duplicate requests
+                |--------------------------------------------------------------------------
+                */
+
+                if (sending) {
+                    return;
+                }
+
+                sending = true;
+
+                try {
+
+                    const response = await fetch(
+                        trackingUrl,
+                        {
+                            method: 'POST',
+
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+
+                            body: formData,
+
+                            credentials: 'same-origin'
+                        }
+                    );
+
+                    if (response.ok) {
+
+                        pendingSeconds -= secondsToSend;
+
+                        if (pendingSeconds < 0) {
+                            pendingSeconds = 0;
+                        }
+
+                    } else {
+
+                        console.error(
+                            'Watch time request failed:',
+                            response.status
+                        );
+                    }
+
+                } catch (error) {
+
+                    console.error(
+                        'Watch time error:',
+                        error
+                    );
+
+                } finally {
+
+                    sending = false;
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Save every 5 seconds
+            |--------------------------------------------------------------------------
+            */
+
+            setInterval(function () {
+
+                if (!player.paused && !player.ended) {
+
+                    if (pendingSeconds >= 5) {
+                        sendWatchTime(false);
+                    }
+
+                }
+
+            }, 1000);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Pause
+            |--------------------------------------------------------------------------
+            */
+
+            player.addEventListener('pause', function () {
+                sendWatchTime(false);
+            });
+
+            /*
+            |--------------------------------------------------------------------------
+            | Video ended
+            |--------------------------------------------------------------------------
+            */
+
+            player.addEventListener('ended', function () {
+                sendWatchTime(false);
+            });
+
+            /*
+            |--------------------------------------------------------------------------
+            | Seeking
+            |--------------------------------------------------------------------------
+            */
+
+            player.addEventListener('seeking', function () {
+                lastTime = player.currentTime;
+            });
+
+            player.addEventListener('seeked', function () {
+                lastTime = player.currentTime;
+            });
+
+            /*
+            |--------------------------------------------------------------------------
+            | Tab hidden
+            |--------------------------------------------------------------------------
+            */
+
+            document.addEventListener('visibilitychange', function () {
+
+                if (document.visibilityState === 'hidden') {
+
+                    sendWatchTime(true);
+
+                } else {
+
+                    lastTime = player.currentTime;
+                }
+            });
+
+            /*
+            |--------------------------------------------------------------------------
+            | Page leave
+            |--------------------------------------------------------------------------
+            */
+
+            window.addEventListener('pagehide', function () {
+
+                sendWatchTime(true);
+
+            });
+
+        });
+    </script>
 @endsection

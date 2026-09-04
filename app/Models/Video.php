@@ -11,9 +11,7 @@ class Video extends Model
 {
     use HasFactory;
 
-
     protected $fillable = [
-
         'user_id',
         'channel_id',
         'category_id',
@@ -30,49 +28,39 @@ class Video extends Model
         'dislikes_count',
         'comments_count',
         'published_at',
-
     ];
-
 
     protected function casts(): array
     {
         return [
-
             'published_at' => 'datetime',
-
         ];
     }
-
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-
     public function channel(): BelongsTo
     {
         return $this->belongsTo(Channel::class);
     }
-
 
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
 
-
     public function views(): HasMany
     {
         return $this->hasMany(VideoView::class);
     }
 
-
     public function likes(): HasMany
     {
         return $this->hasMany(Like::class);
     }
-
 
     public function comments(): HasMany
     {
