@@ -24,17 +24,60 @@
 
         {{-- STAT CARDS GRID --}}
         <div class="row g-4 mb-4">
+          {{-- TOTAL LIKES --}}
             <div class="col-xl-3 col-md-6">
+
                 <div class="tradim-card">
+
                     <div class="d-flex justify-content-between align-items-center">
+
                         <div>
-                            <small class="text-muted">TOTAL VIDEOS</small>
-                            <h2 class="mt-2 mb-0">{{ number_format($totalVideos) }}</h2>
+
+                            <small class="text-muted">
+                                TOTAL LIKES
+                            </small>
+
+                            <h2 class="mt-2 mb-0">
+                                {{ number_format($totalLikes) }}
+                            </h2>
+
                         </div>
-                        <i class="bi bi-play-btn fs-2 text-primary"></i>
+
+                        <i class="bi bi-heart-fill fs-2 text-danger"></i>
+
                     </div>
+
                 </div>
+
             </div>
+
+
+{{-- TOTAL COMMENTS --}}
+<div class="col-xl-3 col-md-6">
+
+    <div class="tradim-card">
+
+        <div class="d-flex justify-content-between align-items-center">
+
+            <div>
+
+                <small class="text-muted">
+                    TOTAL COMMENTS
+                </small>
+
+                <h2 class="mt-2 mb-0">
+                    {{ number_format($totalComments) }}
+                </h2>
+
+            </div>
+
+            <i class="bi bi-chat-fill fs-2 text-info"></i>
+
+        </div>
+
+    </div>
+
+</div>
 
             <div class="col-xl-3 col-md-6">
                 <div class="tradim-card">
@@ -291,6 +334,42 @@
                 </strong>
 
             </div>
+
+
+            {{-- LIKES --}}
+
+<div
+    class="text-center"
+    style="min-width:100px;"
+>
+
+    <span class="text-muted d-block small">
+        Likes
+    </span>
+
+    <strong class="text-danger">
+        {{ number_format($video->likes_count ?? 0) }}
+    </strong>
+
+</div>
+
+
+{{-- COMMENTS --}}
+
+<div
+    class="text-center"
+    style="min-width:110px;"
+>
+
+    <span class="text-muted d-block small">
+        Comments
+    </span>
+
+    <strong class="text-info">
+        {{ number_format($video->comments_count ?? 0) }}
+    </strong>
+
+</div>
 
 
             {{-- TOTAL WATCH TIME --}}
