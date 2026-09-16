@@ -1656,3 +1656,23 @@ body {
     }
 
 }
+
+/* =========================================================
+   TRADIM CREATOR ANALYTICS
+   ========================================================= */
+
+.analytics-chart-card {
+    background: #0b1020;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    padding: 20px;
+    min-height: 360px;
+}
+
+.analytics-chart-card h5 {
+    font-weight: 600;
+}
+
+.analytics-chart-card canvas {
+    max-width: 100%;
+}

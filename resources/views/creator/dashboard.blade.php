@@ -24,60 +24,39 @@
 
         {{-- STAT CARDS GRID --}}
         <div class="row g-4 mb-4">
-          {{-- TOTAL LIKES --}}
+            {{-- TOTAL LIKES --}}
             <div class="col-xl-3 col-md-6">
-
                 <div class="tradim-card">
-
                     <div class="d-flex justify-content-between align-items-center">
-
                         <div>
-
                             <small class="text-muted">
                                 TOTAL LIKES
                             </small>
-
                             <h2 class="mt-2 mb-0">
                                 {{ number_format($totalLikes) }}
                             </h2>
-
                         </div>
-
                         <i class="bi bi-heart-fill fs-2 text-danger"></i>
-
                     </div>
-
                 </div>
-
             </div>
 
-
-{{-- TOTAL COMMENTS --}}
-<div class="col-xl-3 col-md-6">
-
-    <div class="tradim-card">
-
-        <div class="d-flex justify-content-between align-items-center">
-
-            <div>
-
-                <small class="text-muted">
-                    TOTAL COMMENTS
-                </small>
-
-                <h2 class="mt-2 mb-0">
-                    {{ number_format($totalComments) }}
-                </h2>
-
+            {{-- TOTAL COMMENTS --}}
+            <div class="col-xl-3 col-md-6">
+                <div class="tradim-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">
+                                TOTAL COMMENTS
+                            </small>
+                            <h2 class="mt-2 mb-0">
+                                {{ number_format($totalComments) }}
+                            </h2>
+                        </div>
+                        <i class="bi bi-chat-fill fs-2 text-info"></i>
+                    </div>
+                </div>
             </div>
-
-            <i class="bi bi-chat-fill fs-2 text-info"></i>
-
-        </div>
-
-    </div>
-
-</div>
 
             <div class="col-xl-3 col-md-6">
                 <div class="tradim-card">
@@ -104,57 +83,40 @@
             </div>
 
             <div class="col-xl-3 col-md-6">
+                <div class="tradim-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">
+                                TOTAL WATCH TIME
+                            </small>
 
-    <div class="tradim-card">
+                            @php
+                                $hours = floor($totalWatchedSeconds / 3600);
+                                $minutes = floor(($totalWatchedSeconds % 3600) / 60);
+                                $seconds = $totalWatchedSeconds % 60;
+                            @endphp
 
-        <div class="d-flex justify-content-between align-items-center">
+                            <h2 class="mt-2 mb-0">
+                                @if($hours > 0)
+                                    {{ $hours }}h
+                                    {{ $minutes }}m
+                                @elseif($minutes > 0)
+                                    {{ $minutes }}m
+                                    {{ $seconds }}s
+                                @else
+                                    {{ $seconds }}s
+                                @endif
+                            </h2>
 
-            <div>
-
-                <small class="text-muted">
-                    TOTAL WATCH TIME
-                </small>
-
-                @php
-                    $hours = floor($totalWatchedSeconds / 3600);
-                    $minutes = floor(($totalWatchedSeconds % 3600) / 60);
-                    $seconds = $totalWatchedSeconds % 60;
-                @endphp
-
-                <h2 class="mt-2 mb-0">
-
-                    @if($hours > 0)
-
-                        {{ $hours }}h
-                        {{ $minutes }}m
-
-                    @elseif($minutes > 0)
-
-                        {{ $minutes }}m
-                        {{ $seconds }}s
-
-                    @else
-
-                        {{ $seconds }}s
-
-                    @endif
-
-                </h2>
-
-                <small class="text-info">
-                    {{ number_format($totalWatchedSeconds) }}
-                    seconds watched
-                </small>
-
+                            <small class="text-info">
+                                {{ number_format($totalWatchedSeconds) }}
+                                seconds watched
+                            </small>
+                        </div>
+                        <i class="bi bi-clock-history fs-2 text-info"></i>
+                    </div>
+                </div>
             </div>
-
-            <i class="bi bi-clock-history fs-2 text-info"></i>
-
-        </div>
-
-    </div>
-
-</div>
         </div>
 
         {{-- VIDEOS TABLE --}}
@@ -235,216 +197,508 @@
             @endif
         </div>
 
-     {{-- VIDEO WATCH TIME ANALYTICS SECTION --}}
+        {{-- CREATOR  --}}
+        <div class="tradim-card mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                <div>
+                    <h4 class="mb-1">
+                        Creator Analytics
+                    </h4>
+                    <p class="text-muted mb-0">
+                        Track your channel performance over time.
+                    </p>
+                </div>
 
-<div class="tradim-card creator-video-analytics">
+                <div class="d-flex gap-2">
+                    <a
+                        href="{{ route('creator.dashboard', ['period' => 'daily']) }}"
+                        class="btn {{ $period === 'daily' ? 'btn-primary' : 'btn-outline-secondary' }}"
+                    >
+                        Daily
+                    </a>
 
-    <div class="mb-4">
-        <h4 class="mb-1">
-            Video Watch Time Analytics
-        </h4>
+                    <a
+                        href="{{ route('creator.dashboard', ['period' => 'weekly']) }}"
+                        class="btn {{ $period === 'weekly' ? 'btn-primary' : 'btn-outline-secondary' }}"
+                    >
+                        Weekly
+                    </a>
 
-        <p class="text-muted mb-0">
-            See how much time viewers have watched your videos.
-        </p>
-    </div>
-
-    @forelse($videos as $video)
-
-        @php
-
-            $watchSeconds = (int) (
-                $video->total_watched_seconds ?? 0
-            );
-
-            $videoViews = (int) (
-                $video->views_count ?? 0
-            );
-
-            /*
-            |--------------------------------------------------------------------------
-            | Total Watch Time
-            |--------------------------------------------------------------------------
-            */
-
-            $hours = floor(
-                $watchSeconds / 3600
-            );
-
-            $minutes = floor(
-                ($watchSeconds % 3600) / 60
-            );
-
-            $seconds = $watchSeconds % 60;
-
-            /*
-            |--------------------------------------------------------------------------
-            | Average Watch Time
-            |--------------------------------------------------------------------------
-            */
-
-            $averageSeconds = $videoViews > 0
-                ? floor($watchSeconds / $videoViews)
-                : 0;
-
-            $averageMinutes = floor(
-                $averageSeconds / 60
-            );
-
-            $averageRemainingSeconds =
-                $averageSeconds % 60;
-
-        @endphp
-
-        <div
-            class="analytics-video-row d-flex flex-wrap justify-content-between align-items-center py-3 border-bottom border-secondary gap-3">
-
-            {{-- VIDEO --}}
-
-            <div
-                class="analytics-video-title"
-                style="flex:1; min-width:220px;">
-
-                <strong class="d-block">
-                    {{ $video->title }}
-                </strong>
-
-                <small class="text-muted">
-                    {{ $video->created_at
-                        ? $video->created_at->format('d M Y')
-                        : ''
-                    }}
-                </small>
-
+                    <a
+                        href="{{ route('creator.dashboard', ['period' => 'monthly']) }}"
+                        class="btn {{ $period === 'monthly' ? 'btn-primary' : 'btn-outline-secondary' }}"
+                    >
+                        Monthly
+                    </a>
+                </div>
             </div>
 
+            {{-- CHART GRID --}}
+            <div class="row g-4">
+                {{-- VIEWS CHART --}}
+                <div class="col-xl-6">
+                    <div class="analytics-chart-card">
+                        <div class="mb-3">
+                            <h5 class="mb-1">
+                                <i class="bi bi-eye text-warning"></i>
+                                Views
+                            </h5>
+                            <small class="text-muted">
+                                Tracked views during selected period
+                            </small>
+                        </div>
+                        <div style="height:300px;">
+                            <canvas id="tradimViewsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
 
-            {{-- VIEWS --}}
+                {{-- WATCH TIME CHART --}}
+                <div class="col-xl-6">
+                    <div class="analytics-chart-card">
+                        <div class="mb-3">
+                            <h5 class="mb-1">
+                                <i class="bi bi-clock-history text-info"></i>
+                                Watch Time
+                            </h5>
+                            <small class="text-muted">
+                                Total minutes watched
+                            </small>
+                        </div>
+                        <div style="height:300px;">
+                            <canvas id="tradimWatchTimeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
 
-            <div
-                class="text-center"
-                style="min-width:100px;">
+                {{-- SUBSCRIBER GROWTH --}}
+                <div class="col-xl-6">
+                    <div class="analytics-chart-card">
+                        <div class="mb-3">
+                            <h5 class="mb-1">
+                                <i class="bi bi-people text-success"></i>
+                                Subscriber Growth
+                            </h5>
+                            <small class="text-muted">
+                                New subscribers during selected period
+                            </small>
+                        </div>
+                        <div style="height:300px;">
+                            <canvas id="tradimSubscriberChart"></canvas>
+                        </div>
+                    </div>
+                </div>
 
-                <span class="text-muted d-block small">
-                    Views
-                </span>
-
-                <strong>
-                    {{ number_format($videoViews) }}
-                </strong>
-
+                {{-- ENGAGEMENT CHART --}}
+                <div class="col-xl-6">
+                    <div class="analytics-chart-card">
+                        <div class="mb-3">
+                            <h5 class="mb-1">
+                                <i class="bi bi-heart-fill text-danger"></i>
+                                Engagement
+                            </h5>
+                            <small class="text-muted">
+                                Likes and comments
+                            </small>
+                        </div>
+                        <div style="height:300px;">
+                            <canvas id="tradimEngagementChart"></canvas>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-
-            {{-- LIKES --}}
-
-<div
-    class="text-center"
-    style="min-width:100px;"
->
-
-    <span class="text-muted d-block small">
-        Likes
-    </span>
-
-    <strong class="text-danger">
-        {{ number_format($video->likes_count ?? 0) }}
-    </strong>
-
-</div>
-
-
-{{-- COMMENTS --}}
-
-<div
-    class="text-center"
-    style="min-width:110px;"
->
-
-    <span class="text-muted d-block small">
-        Comments
-    </span>
-
-    <strong class="text-info">
-        {{ number_format($video->comments_count ?? 0) }}
-    </strong>
-
-</div>
-
-
-            {{-- TOTAL WATCH TIME --}}
-
-            <div
-                class="text-center"
-                style="min-width:150px;">
-
-                <span class="text-muted d-block small">
-                    Total Watch Time
-                </span>
-
-                <strong class="text-success">
-
-                    @if($hours > 0)
-
-                        {{ $hours }}h
-                        {{ $minutes }}m
-                        {{ $seconds }}s
-
-                    @elseif($minutes > 0)
-
-                        {{ $minutes }}m
-                        {{ $seconds }}s
-
-                    @else
-
-                        {{ $seconds }}s
-
-                    @endif
-
-                </strong>
-
-            </div>
-
-
-            {{-- AVERAGE WATCH TIME --}}
-
-            <div
-                class="text-center"
-                style="min-width:150px;">
-
-                <span class="text-muted d-block small">
-                    Avg. Watch Time
-                </span>
-
-                <strong class="text-info">
-
-                    @if($averageMinutes > 0)
-
-                        {{ $averageMinutes }}m
-                        {{ $averageRemainingSeconds }}s
-
-                    @else
-
-                        {{ $averageSeconds }}s
-
-                    @endif
-
-                </strong>
-
-            </div>
-
         </div>
 
-    @empty
+        {{-- TOP VIDEOS --}}
+        <div class="tradim-card mb-4">
+            <div class="mb-4">
+                <h4 class="mb-1">
+                    Top Videos
+                </h4>
+                <p class="text-muted mb-0">
+                    Your top performing videos by views.
+                </p>
+            </div>
 
-        <p class="text-muted mb-0">
-            No video analytics available.
-        </p>
+            @forelse($topVideos as $topVideo)
+                <div class="d-flex flex-wrap align-items-center gap-3 py-3 border-bottom border-secondary">
+                    {{-- THUMBNAIL --}}
+                    @if($topVideo->thumbnail_path)
+                        <img
+                            src="{{ asset('storage/' . $topVideo->thumbnail_path) }}"
+                            alt="{{ $topVideo->title }}"
+                            style="
+                                width:140px;
+                                height:78px;
+                                object-fit:cover;
+                                border-radius:8px;
+                            "
+                        >
+                    @else
+                        <div
+                            style="
+                                width:140px;
+                                height:78px;
+                                border-radius:8px;
+                                background:#151c30;
+                                display:flex;
+                                align-items:center;
+                                justify-content:center;
+                            "
+                        >
+                            <i class="bi bi-play-circle fs-2"></i>
+                        </div>
+                    @endif
 
-    @endforelse
+                    {{-- VIDEO INFO --}}
+                    <div style="flex:1; min-width:220px;">
+                        <strong class="d-block">
+                            {{ $topVideo->title }}
+                        </strong>
+                        <div class="d-flex flex-wrap gap-3 mt-2">
+                            <small class="text-muted">
+                                <i class="bi bi-eye"></i>
+                                {{ number_format($topVideo->views_count ?? 0) }}
+                                views
+                            </small>
+                            <small class="text-danger">
+                                <i class="bi bi-heart-fill"></i>
+                                {{ number_format($topVideo->likes_count ?? 0) }}
+                            </small>
+                            <small class="text-info">
+                                <i class="bi bi-chat-fill"></i>
+                                {{ number_format($topVideo->comments_count ?? 0) }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="text-center py-4">
+                    <i class="bi bi-bar-chart fs-1 text-muted"></i>
+                    <p class="text-muted mt-3 mb-0">
+                        No video analytics available yet.
+                    </p>
+                </div>
+            @endforelse
+        </div>
 
-</div>
+        {{-- VIDEO WATCH TIME  SECTION --}}
+        <div class="tradim-card creator-video-analytics">
+            <div class="mb-4">
+                <h4 class="mb-1">
+                    Video Watch Time Analytics
+                </h4>
+                <p class="text-muted mb-0">
+                    See how much time viewers have watched your videos.
+                </p>
+            </div>
+
+            @forelse($videos as $video)
+                @php
+                    $watchSeconds = (int) (
+                        $video->total_watched_seconds ?? 0
+                    );
+
+                    $videoViews = (int) (
+                        $video->views_count ?? 0
+                    );
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Total Watch Time
+                    |--------------------------------------------------------------------------
+                    */
+                    $hours = floor(
+                        $watchSeconds / 3600
+                    );
+
+                    $minutes = floor(
+                        ($watchSeconds % 3600) / 60
+                    );
+
+                    $seconds = $watchSeconds % 60;
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Average Watch Time
+                    |--------------------------------------------------------------------------
+                    */
+                    $averageSeconds = $videoViews > 0
+                        ? floor($watchSeconds / $videoViews)
+                        : 0;
+
+                    $averageMinutes = floor(
+                        $averageSeconds / 60
+                    );
+
+                    $averageRemainingSeconds =
+                        $averageSeconds % 60;
+                @endphp
+
+                <div class="analytics-video-row d-flex flex-wrap justify-content-between align-items-center py-3 border-bottom border-secondary gap-3">
+                    {{-- VIDEO --}}
+                    <div
+                        class="analytics-video-title"
+                        style="flex:1; min-width:220px;">
+                        <strong class="d-block">
+                            {{ $video->title }}
+                        </strong>
+                        <small class="text-muted">
+                            {{ $video->created_at
+                                ? $video->created_at->format('d M Y')
+                                : ''
+                            }}
+                        </small>
+                    </div>
+
+                    {{-- VIEWS --}}
+                    <div
+                        class="text-center"
+                        style="min-width:100px;">
+                        <span class="text-muted d-block small">
+                            Views
+                        </span>
+                        <strong>
+                            {{ number_format($videoViews) }}
+                        </strong>
+                    </div>
+
+                    {{-- LIKES --}}
+                    <div
+                        class="text-center"
+                        style="min-width:100px;"
+                    >
+                        <span class="text-muted d-block small">
+                            Likes
+                        </span>
+                        <strong class="text-danger">
+                            {{ number_format($video->likes_count ?? 0) }}
+                        </strong>
+                    </div>
+
+                    {{-- COMMENTS --}}
+                    <div
+                        class="text-center"
+                        style="min-width:110px;"
+                    >
+                        <span class="text-muted d-block small">
+                            Comments
+                        </span>
+                        <strong class="text-info">
+                            {{ number_format($video->comments_count ?? 0) }}
+                        </strong>
+                    </div>
+
+                    {{-- TOTAL WATCH TIME --}}
+                    <div
+                        class="text-center"
+                        style="min-width:150px;">
+                        <span class="text-muted d-block small">
+                            Total Watch Time
+                        </span>
+                        <strong class="text-success">
+                            @if($hours > 0)
+                                {{ $hours }}h
+                                {{ $minutes }}m
+                                {{ $seconds }}s
+                            @elseif($minutes > 0)
+                                {{ $minutes }}m
+                                {{ $seconds }}s
+                            @else
+                                {{ $seconds }}s
+                            @endif
+                        </strong>
+                    </div>
+
+                    {{-- AVERAGE WATCH TIME --}}
+                    <div
+                        class="text-center"
+                        style="min-width:150px;">
+                        <span class="text-muted d-block small">
+                            Avg. Watch Time
+                        </span>
+                        <strong class="text-info">
+                            @if($averageMinutes > 0)
+                                {{ $averageMinutes }}m
+                                {{ $averageRemainingSeconds }}s
+                            @else
+                                {{ $averageSeconds }}s
+                            @endif
+                        </strong>
+                    </div>
+                </div>
+            @empty
+                <p class="text-muted mb-0">
+                    No video analytics available.
+                </p>
+            @endforelse
+        </div>
 
     </div>
-
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const labels = @json($analyticsLabels);
+    const viewsData = @json($viewsData);
+    const watchTimeData = @json($watchTimeData);
+    const subscriberData = @json($subscriberData);
+    const likesData = @json($likesData);
+    const commentsData = @json($commentsData);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Views Chart
+    |--------------------------------------------------------------------------
+    */
+    const viewsCanvas = document.getElementById('tradimViewsChart');
+
+    if (viewsCanvas) {
+        new Chart(viewsCanvas, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Views',
+                        data: viewsData,
+                        tension: 0.35,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Watch Time Chart
+    |--------------------------------------------------------------------------
+    */
+    const watchCanvas = document.getElementById('tradimWatchTimeChart');
+
+    if (watchCanvas) {
+        new Chart(watchCanvas, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Watch Time (minutes)',
+                        data: watchTimeData
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Subscriber Growth Chart
+    |--------------------------------------------------------------------------
+    */
+    const subscriberCanvas = document.getElementById('tradimSubscriberChart');
+
+    if (subscriberCanvas) {
+        new Chart(subscriberCanvas, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'New Subscribers',
+                        data: subscriberData,
+                        tension: 0.35,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Engagement Chart
+    |--------------------------------------------------------------------------
+    */
+    const engagementCanvas = document.getElementById('tradimEngagementChart');
+
+    if (engagementCanvas) {
+        new Chart(engagementCanvas, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Likes',
+                        data: likesData,
+                        tension: 0.35
+                    },
+                    {
+                        label: 'Comments',
+                        data: commentsData,
+                        tension: 0.35
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+});
+</script>
+@endpush
