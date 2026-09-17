@@ -86,31 +86,25 @@
 
                                 @if(Auth::user()->channel)
 
-                                                    <a href="{{ route(
-                                        'channels.show',
-                                        Auth::user()->channel->handle
-                                    ) }}" class="account-channel-btn">
+                                    <a href="{{ route('channels.show', Auth::user()->channel->handle) }}"
+                                        class="account-channel-btn">
+                                        <i class="bi bi-tv"></i>
+                                        View My Channel
+                                        <i class="bi bi-arrow-right"></i>
+                                    </a>
 
-                                                        <i class="bi bi-tv"></i>
-
-                                                        View My Channel
-
-                                                        <i class="bi bi-arrow-right"></i>
-
-                                                    </a>
-
-
+                                    <a href="{{ route('creator.channel.edit') }}" class="account-channel-btn account-settings-btn">
+                                        <i class="bi bi-gear"></i>
+                                        Channel Settings
+                                        <i class="bi bi-arrow-right"></i>
+                                    </a>
 
                                 @else
 
                                     <a href="{{ route('creator.channel.create') }}" class="account-channel-btn">
-
                                         <i class="bi bi-plus-circle"></i>
-
                                         Create Channel
-
                                         <i class="bi bi-arrow-right"></i>
-
                                     </a>
 
                                 @endif

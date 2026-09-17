@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChannelController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\CreatorChannelController;
 use App\Http\Controllers\CreatorController;
 use App\Http\Controllers\CreatorVideoController;
 use App\Http\Controllers\FeedController;
@@ -99,6 +100,22 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware('auth')->prefix('creator')->name('creator.')->group(function () {
     Route::get('/', [CreatorController::class, 'dashboard'])->name('dashboard');
+    
+    /*
+    |--------------------------------------------------------------------------
+     | Channel Management
+    |--------------------------------------------------------------------------
+      */
+    
+    Route::get('/channel/edit', [CreatorChannelController::class, 'edit'])->name('channel.edit');
+    Route::put('/channel', [CreatorChannelController::class, 'update'])->name('channel.update');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Video Management
+    |--------------------------------------------------------------------------
+    */
+
     Route::get('/videos', [CreatorVideoController::class, 'index'])->name('videos.index');
     Route::get('/videos/{video}/edit', [CreatorVideoController::class, 'edit'])->name('videos.edit');
     Route::put('/videos/{video}', [CreatorVideoController::class, 'update'])->name('videos.update');
