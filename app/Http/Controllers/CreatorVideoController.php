@@ -7,7 +7,6 @@ use App\Models\Video;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class CreatorVideoController extends Controller
 {
@@ -152,6 +151,11 @@ class CreatorVideoController extends Controller
                 'in:public,unlisted,private',
             ],
 
+            'status' => [
+                'required',
+                'in:draft,published',
+            ],
+
         ]);
 
         /*
@@ -191,6 +195,34 @@ class CreatorVideoController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | Published At
+        |--------------------------------------------------------------------------
+        */
+
+        $publishedAt = $video->published_at;
+
+        if ($validated['status'] === 'published') {
+
+            /*
+            | If video is being published for the first time,
+            | set current date/time.
+            */
+
+            if (!$publishedAt) {
+                $publishedAt = now();
+            }
+
+        } else {
+
+            /*
+            | Draft videos should not have a published date.
+            */
+
+            $publishedAt = null;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
         | Update Video
         |--------------------------------------------------------------------------
         */
@@ -211,6 +243,12 @@ class CreatorVideoController extends Controller
 
             'visibility' =>
                 $validated['visibility'],
+
+            'status' =>
+                $validated['status'],
+
+            'published_at' =>
+                $publishedAt,
 
         ]);
 
@@ -237,7 +275,8 @@ class CreatorVideoController extends Controller
 
         if (!$channel) {
             return redirect()
-                ->route('creator.channel.create');
+                ->route('creator.channel.create')
+                ->with('error', 'Create your channel first.');
         }
 
         /*

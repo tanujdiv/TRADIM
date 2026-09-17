@@ -64,6 +64,23 @@
 
 
         {{-- =========================================================
+        SUCCESS
+        ========================================================== --}}
+
+        @if(session('success'))
+
+            <div class="success-box">
+
+                <i class="bi bi-check-circle-fill"></i>
+
+                {{ session('success') }}
+
+            </div>
+
+        @endif
+
+
+        {{-- =========================================================
         FORM
         ========================================================== --}}
 
@@ -101,6 +118,8 @@
                         </div>
 
 
+                        {{-- TITLE --}}
+
                         <div class="form-group">
 
                             <label>
@@ -113,6 +132,8 @@
                         </div>
 
 
+                        {{-- DESCRIPTION --}}
+
                         <div class="form-group">
 
                             <label>
@@ -124,6 +145,8 @@
 
                         </div>
 
+
+                        {{-- CATEGORY + VISIBILITY --}}
 
                         <div class="form-row">
 
@@ -198,10 +221,49 @@
 
                         </div>
 
+
+                        {{-- STATUS --}}
+
+                        <div class="form-group">
+
+                            <label>
+                                Video Status
+                            </label>
+
+                            <select name="status">
+
+                                <option value="published" @selected(
+                                    old(
+                                        'status',
+                                        $video->status
+                                    ) === 'published'
+                                )>
+                                    Published
+                                </option>
+
+                                <option value="draft" @selected(
+                                    old(
+                                        'status',
+                                        $video->status
+                                    ) === 'draft'
+                                )>
+                                    Draft
+                                </option>
+
+                            </select>
+
+                            <small>
+                                Draft videos are not published. Published videos can be shown according to their visibility.
+                            </small>
+
+                        </div>
+
                     </div>
 
 
-                    {{-- THUMBNAIL --}}
+                    {{-- =================================================
+                    THUMBNAIL
+                    ================================================== --}}
 
                     <div class="edit-card">
 
@@ -246,7 +308,9 @@
                     </div>
 
 
-                    {{-- VIDEO FILE INFO --}}
+                    {{-- =================================================
+                    VIDEO FILE INFO
+                    ================================================== --}}
 
                     <div class="edit-card">
 
@@ -262,6 +326,7 @@
 
                         </div>
 
+
                         <div class="file-info">
 
                             <i class="bi bi-file-earmark-play"></i>
@@ -273,12 +338,13 @@
                                 </strong>
 
                                 <span>
-                                    {{ basename($video->video_path) }}
+                                    {{ $video->video_path ? basename($video->video_path) : 'No video file' }}
                                 </span>
 
                             </div>
 
                         </div>
+
 
                         <div class="notice">
 
@@ -291,7 +357,9 @@
                     </div>
 
 
-                    {{-- ACTIONS --}}
+                    {{-- =================================================
+                    ACTIONS
+                    ================================================== --}}
 
                     <div class="form-actions">
 
@@ -310,16 +378,20 @@
 
 
                 {{-- =================================================
-                RIGHT
+                RIGHT SIDEBAR
                 ================================================== --}}
 
                 <div class="edit-sidebar">
+
+
+                    {{-- PREVIEW --}}
 
                     <div class="preview-card">
 
                         <div class="preview-title">
                             Video Preview
                         </div>
+
 
                         <div class="preview-thumbnail">
 
@@ -339,16 +411,46 @@
 
                         </div>
 
+
                         <h3>
                             {{ $video->title }}
                         </h3>
+
 
                         <p>
                             {{ number_format($video->views_count) }} views
                         </p>
 
+
+                        <div class="preview-status">
+
+                            <span>
+                                Status
+                            </span>
+
+                            <strong>
+                                {{ ucfirst($video->status) }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="preview-status">
+
+                            <span>
+                                Visibility
+                            </span>
+
+                            <strong>
+                                {{ ucfirst($video->visibility) }}
+                            </strong>
+
+                        </div>
+
                     </div>
 
+
+                    {{-- TIPS --}}
 
                     <div class="tips-card">
 
@@ -375,6 +477,10 @@
                                 Choose the correct category.
                             </li>
 
+                            <li>
+                                Use Draft when you are not ready to publish.
+                            </li>
+
                         </ul>
 
                     </div>
@@ -390,8 +496,8 @@
 
     <style>
         /* =========================================================
-       PAGE
-    ========================================================= */
+            PAGE
+            ========================================================= */
 
         .edit-video-page {
             color: #f8fafc;
@@ -399,27 +505,21 @@
 
 
         /* =========================================================
-       HEADER
-    ========================================================= */
+            HEADER
+            ========================================================= */
 
         .edit-header {
             display: flex;
-
             align-items: center;
             justify-content: space-between;
-
             gap: 20px;
-
             margin-bottom: 25px;
         }
 
         .edit-header h1 {
             margin: 0 0 7px;
-
             color: #ffffff;
-
             font-size: 28px;
-
             font-weight: 800;
         }
 
@@ -429,58 +529,40 @@
 
         .edit-header p {
             margin: 0;
-
             color: #94a3b8;
-
             font-size: 14px;
         }
 
         .back-btn {
             display: inline-flex;
-
             align-items: center;
-
             gap: 7px;
-
             padding: 10px 15px;
-
             border-radius: 9px;
-
             background: #151c2d;
-
             border: 1px solid #2a354c;
-
             color: #cbd5e1 !important;
-
             text-decoration: none;
-
             font-size: 13px;
-
             font-weight: 600;
         }
 
         .back-btn:hover {
             border-color: #7c3aed;
-
             color: #ffffff !important;
         }
 
 
         /* =========================================================
-       VALIDATION
-    ========================================================= */
+            VALIDATION
+            ========================================================= */
 
         .validation-box {
             margin-bottom: 20px;
-
             padding: 15px 18px;
-
             border-radius: 10px;
-
             background: rgba(239, 68, 68, .10);
-
             border: 1px solid rgba(239, 68, 68, .25);
-
             color: #fca5a5;
         }
 
@@ -490,81 +572,83 @@
 
         .validation-box ul {
             margin: 8px 0 0;
-
             padding-left: 20px;
-
             color: #fda4af;
-
             font-size: 13px;
         }
 
 
         /* =========================================================
-       LAYOUT
-    ========================================================= */
+            SUCCESS
+            ========================================================= */
+
+        .success-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 13px 16px;
+            border-radius: 10px;
+            background: rgba(34, 197, 94, .10);
+            border: 1px solid rgba(34, 197, 94, .25);
+            color: #86efac;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+
+        /* =========================================================
+            LAYOUT
+            ========================================================= */
 
         .edit-layout {
             display: grid;
-
-            grid-template-columns:
-                minmax(0, 1fr) 320px;
-
+            grid-template-columns: minmax(0, 1fr) 320px;
             gap: 22px;
-
             align-items: start;
         }
 
 
         /* =========================================================
-       CARD
-    ========================================================= */
+            CARD
+            ========================================================= */
 
         .edit-card,
         .preview-card,
         .tips-card {
             background: #121a2b;
-
             border: 1px solid #273149;
-
             border-radius: 14px;
         }
 
         .edit-card {
             padding: 22px;
-
             margin-bottom: 20px;
         }
 
         .card-title {
             margin-bottom: 22px;
-
             padding-bottom: 15px;
-
             border-bottom: 1px solid #222c40;
         }
 
         .card-title h2 {
             margin: 0 0 5px;
-
             color: #ffffff;
-
             font-size: 18px;
-
             font-weight: 800;
         }
 
         .card-title p {
             margin: 0;
-
             color: #64748b;
-
             font-size: 12px;
         }
 
 
         /* =========================================================
-       FORM
-    ========================================================= */
+            FORM
+            ========================================================= */
 
         .form-group {
             margin-bottom: 20px;
@@ -576,13 +660,9 @@
 
         .form-group label {
             display: block;
-
             margin-bottom: 8px;
-
             color: #e2e8f0;
-
             font-size: 13px;
-
             font-weight: 700;
         }
 
@@ -590,25 +670,17 @@
         .form-group textarea,
         .form-group select {
             width: 100%;
-
             padding: 11px 13px;
-
             background: #0d1423;
-
             border: 1px solid #2a354c;
-
             border-radius: 9px;
-
             color: #ffffff;
-
             outline: none;
-
             font-size: 13px;
         }
 
         .form-group textarea {
             resize: vertical;
-
             min-height: 150px;
         }
 
@@ -616,9 +688,7 @@
         .form-group textarea:focus,
         .form-group select:focus {
             border-color: #7c3aed;
-
-            box-shadow:
-                0 0 0 3px rgba(124, 58, 237, .10);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, .10);
         }
 
         .form-group input::placeholder,
@@ -628,196 +698,162 @@
 
         .form-group small {
             display: block;
-
             margin-top: 7px;
-
             color: #64748b;
-
             font-size: 11px;
+            line-height: 1.5;
         }
 
         .form-row {
             display: grid;
-
-            grid-template-columns:
-                1fr 1fr;
-
+            grid-template-columns: 1fr 1fr;
             gap: 15px;
         }
 
 
         /* =========================================================
-       THUMBNAIL
-    ========================================================= */
+            THUMBNAIL
+            ========================================================= */
 
         .current-thumbnail {
             width: 100%;
-
             max-width: 600px;
-
             margin-bottom: 18px;
-
             aspect-ratio: 16 / 9;
-
             overflow: hidden;
-
             border-radius: 10px;
-
             background: #070b13;
         }
 
         .current-thumbnail img {
             width: 100%;
             height: 100%;
-
             object-fit: cover;
         }
 
 
         /* =========================================================
-       FILE INFO
-    ========================================================= */
+            FILE INFO
+            ========================================================= */
 
         .file-info {
             display: flex;
-
             align-items: center;
-
             gap: 13px;
-
             padding: 14px;
-
             border-radius: 10px;
-
             background: #0d1423;
-
             border: 1px solid #222c40;
         }
 
         .file-info>i {
             color: #8b5cf6;
-
             font-size: 28px;
         }
 
         .file-info strong {
             display: block;
-
             color: #ffffff;
-
             font-size: 13px;
         }
 
         .file-info span {
             display: block;
-
             margin-top: 4px;
-
             color: #64748b;
-
             font-size: 11px;
-
             word-break: break-all;
         }
 
         .notice {
             display: flex;
-
             gap: 8px;
-
             margin-top: 13px;
-
             padding: 11px;
-
             border-radius: 8px;
-
             background: rgba(59, 130, 246, .08);
-
             color: #93c5fd;
-
             font-size: 11px;
-
             line-height: 1.5;
         }
 
 
         /* =========================================================
-       PREVIEW
-    ========================================================= */
+            PREVIEW
+            ========================================================= */
 
         .preview-card {
             padding: 18px;
-
             margin-bottom: 20px;
         }
 
         .preview-title {
             margin-bottom: 13px;
-
             color: #ffffff;
-
             font-size: 15px;
-
             font-weight: 800;
         }
 
         .preview-thumbnail {
             width: 100%;
-
             aspect-ratio: 16 / 9;
-
             overflow: hidden;
-
             border-radius: 9px;
-
             background: #070b13;
-
             margin-bottom: 13px;
         }
 
         .preview-thumbnail img {
             width: 100%;
             height: 100%;
-
             object-fit: cover;
         }
 
         .preview-empty {
             width: 100%;
             height: 100%;
-
             display: flex;
-
             align-items: center;
             justify-content: center;
-
             color: #8b5cf6;
-
             font-size: 40px;
         }
 
         .preview-card h3 {
             margin: 0 0 5px;
-
             color: #ffffff;
-
             font-size: 14px;
-
             line-height: 1.4;
         }
 
         .preview-card p {
-            margin: 0;
-
+            margin: 0 0 12px;
             color: #64748b;
+            font-size: 11px;
+        }
 
+        .preview-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-top: 1px solid #222c40;
+        }
+
+        .preview-status span {
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        .preview-status strong {
+            color: #cbd5e1;
             font-size: 11px;
         }
 
 
         /* =========================================================
-       TIPS
-    ========================================================= */
+            TIPS
+            ========================================================= */
 
         .tips-card {
             padding: 18px;
@@ -825,9 +861,7 @@
 
         .tips-card h3 {
             margin: 0 0 14px;
-
             color: #ffffff;
-
             font-size: 15px;
         }
 
@@ -837,75 +871,55 @@
 
         .tips-card ul {
             margin: 0;
-
             padding-left: 18px;
         }
 
         .tips-card li {
             margin-bottom: 10px;
-
             color: #94a3b8;
-
             font-size: 12px;
-
             line-height: 1.5;
         }
 
 
         /* =========================================================
-       ACTIONS
-    ========================================================= */
+            ACTIONS
+            ========================================================= */
 
         .form-actions {
             display: flex;
-
             justify-content: flex-end;
-
             gap: 10px;
         }
 
         .cancel-btn,
         .save-btn {
             display: inline-flex;
-
             align-items: center;
-
             justify-content: center;
-
             gap: 7px;
-
             padding: 11px 18px;
-
             border-radius: 9px;
-
             font-size: 13px;
-
             font-weight: 700;
-
             text-decoration: none;
-
             cursor: pointer;
         }
 
         .cancel-btn {
             background: #151c2d;
-
             border: 1px solid #2a354c;
-
             color: #cbd5e1 !important;
         }
 
         .cancel-btn:hover {
             color: #ffffff !important;
-
             border-color: #475569;
         }
 
         .save-btn {
             border: 0;
-
             background: #7c3aed;
-
             color: #ffffff;
         }
 
@@ -915,8 +929,8 @@
 
 
         /* =========================================================
-       RESPONSIVE
-    ========================================================= */
+            RESPONSIVE
+            ========================================================= */
 
         @media (max-width: 1000px) {
 
@@ -934,7 +948,6 @@
 
             .edit-header {
                 align-items: flex-start;
-
                 flex-direction: column;
             }
 
