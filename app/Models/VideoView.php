@@ -10,6 +10,10 @@ class VideoView extends Model
 {
     use HasFactory;
 
+    protected $table = 'video_views';
+
+    public $timestamps = false;
+
     protected $fillable = [
         'video_id',
         'user_id',
@@ -28,12 +32,6 @@ class VideoView extends Model
         'completed' => 'boolean',
     ];
 
-    /*
-    |--------------------------------------------------------------------------
-    | Video
-    |--------------------------------------------------------------------------
-    */
-
     public function video(): BelongsTo
     {
         return $this->belongsTo(
@@ -41,12 +39,6 @@ class VideoView extends Model
             'video_id'
         );
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | User
-    |--------------------------------------------------------------------------
-    */
 
     public function user(): BelongsTo
     {
