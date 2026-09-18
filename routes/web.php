@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/watch/{slug}', [VideoController::class, 'show'])->name('videos.show');
+Route::get('/watch/{video:slug}', [VideoController::class, 'show'])->middleware('track.video.view')->name('videos.show');
 Route::get('/channel/{handle}', [ChannelController::class, 'show'])->name('channels.show');
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 

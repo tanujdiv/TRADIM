@@ -2,37 +2,57 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class VideoView extends Model
 {
-    protected $table = 'video_views';
-
-    public const UPDATED_AT = null;
+    use HasFactory;
 
     protected $fillable = [
         'video_id',
         'user_id',
         'session_id',
         'ip_hash',
+        'last_viewed_at',
         'last_position',
         'watched_seconds',
         'completed',
     ];
 
     protected $casts = [
-        'completed' => 'boolean',
+        'last_viewed_at' => 'datetime',
         'last_position' => 'integer',
         'watched_seconds' => 'integer',
+        'completed' => 'boolean',
     ];
 
-    public function video()
+    /*
+    |--------------------------------------------------------------------------
+    | Video
+    |--------------------------------------------------------------------------
+    */
+
+    public function video(): BelongsTo
     {
-        return $this->belongsTo(Video::class);
+        return $this->belongsTo(
+            Video::class,
+            'video_id'
+        );
     }
 
-    public function user()
+    /*
+    |--------------------------------------------------------------------------
+    | User
+    |--------------------------------------------------------------------------
+    */
+
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(
+            User::class,
+            'user_id'
+        );
     }
 }

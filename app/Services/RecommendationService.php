@@ -49,7 +49,7 @@ class RecommendationService
 
         $watchedVideoIds = VideoView::query()
             ->where('user_id', $user->id)
-            ->latest('updated_at')
+            ->latest('id') // updated_at ki jagah id use kiya gaya hai
             ->limit(30)
             ->pluck('video_id')
             ->unique()
@@ -394,7 +394,7 @@ class RecommendationService
 
         $videoIds = VideoView::query()
             ->where('user_id', $user->id)
-            ->latest('updated_at')
+            ->latest('id') // updated_at ki jagah id use kiya gaya hai
             ->limit(30)
             ->pluck('video_id')
             ->unique()
