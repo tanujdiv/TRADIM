@@ -39,16 +39,22 @@
 
                     @auth
 
-                        <a href="{{ route('videos.create') }}" class="btn-tradim-outline">
+                        <a href="{{ route('videos.create') }}"
+                           class="btn-tradim-outline">
+
                             <i class="bi bi-cloud-upload"></i>
                             Upload Video
+
                         </a>
 
                     @else
 
-                        <a href="{{ route('register') }}" class="btn-tradim-outline">
+                        <a href="{{ route('register') }}"
+                           class="btn-tradim-outline">
+
                             <i class="bi bi-person-plus"></i>
                             Join Tradim
+
                         </a>
 
                     @endauth
@@ -60,6 +66,7 @@
             <div class="hero-decoration">
 
                 <div class="hero-circle hero-circle-one"></div>
+
                 <div class="hero-circle hero-circle-two"></div>
 
                 <i class="bi bi-play-fill hero-play-icon"></i>
@@ -77,16 +84,22 @@
 
             <div class="category-scroll">
 
-                <a href="{{ route('home') }}" class="category-pill {{ !$categoryId ? 'active' : '' }}">
+                <a href="{{ route('home') }}"
+                   class="category-pill {{ !$categoryId ? 'active' : '' }}">
+
                     <i class="bi bi-grid-fill"></i>
                     All
+
                 </a>
 
                 @foreach($categories as $category)
 
                     <a href="{{ route('home', ['category' => $category->id]) }}"
-                        class="category-pill {{ (int) $categoryId === (int) $category->id ? 'active' : '' }}">
+                       class="category-pill
+                       {{ (int) $categoryId === (int) $category->id ? 'active' : '' }}">
+
                         {{ $category->name }}
+
                     </a>
 
                 @endforeach
@@ -97,148 +110,52 @@
 
 
         {{-- =========================================================
-        TRENDING
+        SELECTED CATEGORY
         ========================================================== --}}
 
-        @if($trendingVideos->count())
+        @if($selectedCategory)
 
-            <section class="video-section">
+            @if($categoryVideos->count())
 
-                <div class="section-heading">
+                <section class="video-section">
 
-                    <div>
-                        <h2>
-                            <i class="bi bi-fire"></i>
-                            Trending
-                        </h2>
+                    <div class="section-heading">
 
-                        <p>
-                            Videos people are watching right now
-                        </p>
+                        <div>
+
+                            <h2>
+
+                                <i class="bi bi-funnel-fill"></i>
+
+                                {{ $selectedCategory->name }}
+
+                            </h2>
+
+                            <p>
+                                Videos from this category
+                            </p>
+
+                        </div>
+
                     </div>
 
-                </div>
+                    <div class="video-grid">
 
+                        @foreach($categoryVideos as $video)
 
-                <div class="video-grid">
+                            @include('videos.partials.card', [
+                                'video' => $video
+                            ])
 
-                    @foreach($trendingVideos as $video)
+                        @endforeach
 
-                        @include('videos.partials.card', [
-                            'video' => $video
-                        ])
-
-                    @endforeach
-
-                </div>
-
-            </section>
-
-        @endif
-
-
-        {{-- =========================================================
-        POPULAR
-        ========================================================== --}}
-
-        @if($popularVideos->count())
-
-            <section class="video-section">
-
-                <div class="section-heading">
-
-                    <div>
-                        <h2>
-                            <i class="bi bi-star-fill"></i>
-                            Popular
-                        </h2>
-
-                        <p>
-                            Popular videos from the Tradim community
-                        </p>
                     </div>
 
-                </div>
-
-
-                <div class="video-grid">
-
-                    @foreach($popularVideos as $video)
-
-                        @include('videos.partials.card', [
-                            'video' => $video
-                        ])
-
-                    @endforeach
-
-                </div>
-
-            </section>
-
-        @endif
-
-
-        {{-- =========================================================
-        LATEST VIDEOS
-        ========================================================== --}}
-
-        <section class="video-section" id="videos">
-
-            <div class="section-heading">
-
-                <div>
-
-                    <h2>
-
-                        @if($categoryId)
-
-                            <i class="bi bi-funnel-fill"></i>
-                            Category Videos
-
-                        @else
-
-                            <i class="bi bi-clock-fill"></i>
-                            Latest Videos
-
-                        @endif
-
-                    </h2>
-
-                    <p>
-                        Fresh content from Tradim creators
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            @if($latestVideos->count())
-
-                <div class="video-grid">
-
-                    @foreach($latestVideos as $video)
-
-                        @include('videos.partials.card', [
-                            'video' => $video
-                        ])
-
-                    @endforeach
-
-                </div>
-
-
-                {{-- PAGINATION --}}
-
-                <div class="tradim-pagination">
-
-                    {{ $latestVideos->links() }}
-
-                </div>
+                </section>
 
             @else
 
-                <div class="empty-state">
+                <div class="empty-state mb-5">
 
                     <div class="empty-icon">
                         <i class="bi bi-camera-video-off"></i>
@@ -252,23 +169,382 @@
                         There are no videos available in this category yet.
                     </p>
 
-                    <a href="{{ route('home') }}" class="btn-tradim">
+                    <a href="{{ route('home') }}"
+                       class="btn-tradim">
+
                         View All Videos
+
                     </a>
 
                 </div>
 
             @endif
 
-        </section>
+        @else
+
+            {{-- =====================================================
+            RECOMMENDED
+            ====================================================== --}}
+
+            @if($recommendedVideos->count())
+
+                <section class="video-section">
+
+                    <div class="section-heading">
+
+                        <div>
+
+                            <h2>
+
+                                <i class="bi bi-stars"></i>
+                                Recommended For You
+
+                            </h2>
+
+                            <p>
+                                Videos selected based on your activity
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="video-grid">
+
+                        @foreach($recommendedVideos as $video)
+
+                            @include('videos.partials.card', [
+                                'video' => $video
+                            ])
+
+                        @endforeach
+
+                    </div>
+
+                </section>
+
+            @endif
+
+
+            {{-- =====================================================
+            SUBSCRIPTIONS
+            ====================================================== --}}
+
+            @auth
+
+                @if($subscribedVideos->count())
+
+                    <section class="video-section">
+
+                        <div class="section-heading">
+
+                            <div>
+
+                                <h2>
+
+                                    <i class="bi bi-collection-play-fill"></i>
+                                    From Your Subscriptions
+
+                                </h2>
+
+                                <p>
+                                    Latest videos from channels you follow
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        <div class="video-grid">
+
+                            @foreach($subscribedVideos as $video)
+
+                                @include('videos.partials.card', [
+                                    'video' => $video
+                                ])
+
+                            @endforeach
+
+                        </div>
+
+                    </section>
+
+                @endif
+
+
+                {{-- =================================================
+                RECENTLY WATCHED
+                ================================================== --}}
+
+                @if($recentlyWatched->count())
+
+                    <section class="video-section">
+
+                        <div class="section-heading">
+
+                            <div>
+
+                                <h2>
+
+                                    <i class="bi bi-clock-history"></i>
+                                    Recently Watched
+
+                                </h2>
+
+                                <p>
+                                    Continue watching videos you viewed recently
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        <div class="video-grid">
+
+                            @foreach($recentlyWatched as $video)
+
+                                @include('videos.partials.card', [
+                                    'video' => $video
+                                ])
+
+                            @endforeach
+
+                        </div>
+
+                    </section>
+
+                @endif
+
+            @endauth
+
+
+            {{-- =====================================================
+            TRENDING
+            ====================================================== --}}
+
+            @if($trendingVideos->count())
+
+                <section class="video-section">
+
+                    <div class="section-heading">
+
+                        <div>
+
+                            <h2>
+
+                                <i class="bi bi-fire"></i>
+                                Trending
+
+                            </h2>
+
+                            <p>
+                                Videos people are watching right now
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="video-grid">
+
+                        @foreach($trendingVideos as $video)
+
+                            @include('videos.partials.card', [
+                                'video' => $video
+                            ])
+
+                        @endforeach
+
+                    </div>
+
+                </section>
+
+            @endif
+
+
+            {{-- =====================================================
+            POPULAR
+            ====================================================== --}}
+
+            @if($popularVideos->count())
+
+                <section class="video-section">
+
+                    <div class="section-heading">
+
+                        <div>
+
+                            <h2>
+
+                                <i class="bi bi-star-fill"></i>
+                                Popular
+
+                            </h2>
+
+                            <p>
+                                Popular videos from the Tradim community
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="video-grid">
+
+                        @foreach($popularVideos as $video)
+
+                            @include('videos.partials.card', [
+                                'video' => $video
+                            ])
+
+                        @endforeach
+
+                    </div>
+
+                </section>
+
+            @endif
+
+
+            {{-- =====================================================
+            LATEST VIDEOS
+            ====================================================== --}}
+
+            <section class="video-section" id="videos">
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <h2>
+
+                            <i class="bi bi-clock-fill"></i>
+                            Latest Videos
+
+                        </h2>
+
+                        <p>
+                            Fresh content from Tradim creators
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                @if($latestVideos->count())
+
+                    <div class="video-grid">
+
+                        @foreach($latestVideos as $video)
+
+                            @include('videos.partials.card', [
+                                'video' => $video
+                            ])
+
+                        @endforeach
+
+                    </div>
+
+                @else
+
+                    <div class="empty-state">
+
+                        <div class="empty-icon">
+
+                            <i class="bi bi-camera-video-off"></i>
+
+                        </div>
+
+                        <h3>
+                            No videos found
+                        </h3>
+
+                        <p>
+                            There are no videos available on Tradim yet.
+                        </p>
+
+                        @auth
+
+                            <a href="{{ route('videos.create') }}"
+                               class="btn-tradim">
+
+                                Upload First Video
+
+                            </a>
+
+                        @else
+
+                            <a href="{{ route('register') }}"
+                               class="btn-tradim">
+
+                                Join Tradim
+
+                            </a>
+
+                        @endauth
+
+                    </div>
+
+                @endif
+
+            </section>
+
+
+            {{-- =====================================================
+            CATEGORY SECTIONS
+            ====================================================== --}}
+
+            @foreach($categorySections as $section)
+
+                <section class="video-section">
+
+                    <div class="section-heading">
+
+                        <div>
+
+                            <h2>
+
+                                <i class="bi bi-grid-fill"></i>
+
+                                {{ $section['category']->name }}
+
+                            </h2>
+
+                            <p>
+                                Latest videos in {{ $section['category']->name }}
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="video-grid">
+
+                        @foreach($section['videos'] as $video)
+
+                            @include('videos.partials.card', [
+                                'video' => $video
+                            ])
+
+                        @endforeach
+
+                    </div>
+
+                </section>
+
+            @endforeach
+
+        @endif
 
     </div>
 
 
     <style>
+
         /* =========================================================
-       HOME
-    ========================================================= */
+        HOME
+        ========================================================= */
 
         .tradim-home {
             color: #f8fafc;
@@ -277,8 +553,8 @@
 
 
         /* =========================================================
-       HERO
-    ========================================================= */
+        HERO
+        ========================================================= */
 
         .tradim-hero {
             position: relative;
@@ -296,12 +572,16 @@
             border-radius: 22px;
 
             background:
-                radial-gradient(circle at 85% 30%,
+                radial-gradient(
+                    circle at 85% 30%,
                     rgba(124, 58, 237, .28),
-                    transparent 35%),
-                radial-gradient(circle at 70% 90%,
+                    transparent 35%
+                ),
+                radial-gradient(
+                    circle at 70% 90%,
                     rgba(236, 72, 153, .16),
-                    transparent 35%),
+                    transparent 35%
+                ),
                 #0d1425;
 
             border: 1px solid #202b42;
@@ -318,7 +598,9 @@
 
         .hero-badge {
             display: inline-flex;
+
             align-items: center;
+
             gap: 8px;
 
             padding: 7px 13px;
@@ -332,6 +614,7 @@
             color: #c4b5fd;
 
             font-size: 12px;
+
             font-weight: 700;
         }
 
@@ -371,7 +654,9 @@
 
         .hero-actions {
             display: flex;
+
             gap: 12px;
+
             flex-wrap: wrap;
         }
 
@@ -436,8 +721,8 @@
 
 
         /* =========================================================
-       HERO DECORATION
-    ========================================================= */
+        HERO DECORATION
+        ========================================================= */
 
         .hero-decoration {
             position: absolute;
@@ -503,8 +788,8 @@
 
 
         /* =========================================================
-       CATEGORIES
-    ========================================================= */
+        CATEGORIES
+        ========================================================= */
 
         .category-section {
             margin-bottom: 32px;
@@ -575,8 +860,8 @@
 
 
         /* =========================================================
-       VIDEO SECTION
-    ========================================================= */
+        VIDEO SECTION
+        ========================================================= */
 
         .video-section {
             margin-bottom: 45px;
@@ -625,8 +910,8 @@
 
 
         /* =========================================================
-       VIDEO GRID
-    ========================================================= */
+        VIDEO GRID
+        ========================================================= */
 
         .video-grid {
             display: grid;
@@ -639,67 +924,8 @@
 
 
         /* =========================================================
-       PAGINATION
-    ========================================================= */
-
-        .tradim-pagination {
-            display: flex;
-
-            justify-content: center;
-
-            margin-top: 30px;
-        }
-
-
-        .tradim-pagination nav {
-            display: flex;
-        }
-
-
-        .tradim-pagination .pagination {
-            margin: 0;
-
-            gap: 5px;
-        }
-
-
-        .tradim-pagination .page-link {
-            background: #111a2c;
-
-            border: 1px solid #29344b;
-
-            color: #cbd5e1;
-
-            border-radius: 8px;
-        }
-
-
-        .tradim-pagination .page-link:hover {
-            background: #1d2940;
-
-            color: #ffffff;
-        }
-
-
-        .tradim-pagination .active .page-link {
-            background: #7c3aed;
-
-            border-color: #7c3aed;
-
-            color: #ffffff;
-        }
-
-
-        .tradim-pagination .disabled .page-link {
-            background: #0d1425;
-
-            color: #475569;
-        }
-
-
-        /* =========================================================
-       EMPTY STATE
-    ========================================================= */
+        EMPTY STATE
+        ========================================================= */
 
         .empty-state {
             padding: 60px 20px;
@@ -754,8 +980,8 @@
 
 
         /* =========================================================
-       RESPONSIVE
-    ========================================================= */
+        RESPONSIVE
+        ========================================================= */
 
         @media (max-width: 1200px) {
 
@@ -816,6 +1042,7 @@
             }
 
         }
+
     </style>
 
 @endsection

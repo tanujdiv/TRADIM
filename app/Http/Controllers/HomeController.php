@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
-use App\Models\Video;
+use App\Services\RecommendationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
@@ -14,74 +15,70 @@ class HomeController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function index(Request $request)
-    {
+    public function index(
+        Request $request,
+        RecommendationService $recommendationService
+    ) {
         /*
         |--------------------------------------------------------------------------
-        | Category
+        | Category Filter
         |--------------------------------------------------------------------------
         */
 
         $categoryId = $request->integer('category');
 
-        /*
-        |--------------------------------------------------------------------------
-        | Latest Videos
-        |--------------------------------------------------------------------------
-        */
+        $selectedCategory = null;
 
-        $latestVideos = Video::with([
-            'channel',
-            'category',
-        ])
-            ->where('status', 'published')
-            ->where('visibility', 'public')
-            ->when(
-                $categoryId,
-                function ($query) use ($categoryId) {
-                    $query->where(
-                        'category_id',
-                        $categoryId
-                    );
-                }
-            )
-            ->latest('published_at')
-            ->paginate(24)
-            ->withQueryString();
+        if ($categoryId) {
+            $selectedCategory = Category::query()
+                ->where('is_active', true)
+                ->where('id', $categoryId)
+                ->first();
+        }
 
         /*
         |--------------------------------------------------------------------------
-        | Trending Videos
+        | Recommendation Sections
         |--------------------------------------------------------------------------
         */
 
-        $trendingVideos = Video::with([
-            'channel',
-            'category',
-        ])
-            ->where('status', 'published')
-            ->where('visibility', 'public')
-            ->orderByDesc('views_count')
-            ->latest('published_at')
-            ->take(12)
-            ->get();
+        $recommendedVideos = $recommendationService
+            ->recommended(12);
+
+        $trendingVideos = $recommendationService
+            ->trending(12);
+
+        $popularVideos = $recommendationService
+            ->popular(12);
+
+        $latestVideos = $recommendationService
+            ->latest(24);
 
         /*
         |--------------------------------------------------------------------------
-        | Popular Videos
+        | Subscription Videos
         |--------------------------------------------------------------------------
         */
 
-        $popularVideos = Video::with([
-            'channel',
-            'category',
-        ])
-            ->where('status', 'published')
-            ->where('visibility', 'public')
-            ->orderByDesc('likes_count')
-            ->orderByDesc('views_count')
-            ->take(12)
-            ->get();
+        $subscribedVideos = collect();
+
+        if (Auth::check()) {
+            $subscribedVideos = $recommendationService
+                ->subscribed(12);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Recently Watched
+        |--------------------------------------------------------------------------
+        */
+
+        $recentlyWatched = collect();
+
+        if (Auth::check()) {
+            $recentlyWatched = $recommendationService
+                ->recentlyWatched(8);
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -89,21 +86,71 @@ class HomeController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $categories = Category::where(
-            'is_active',
-            true
-        )
+        $categories = Category::query()
+            ->where('is_active', true)
             ->orderBy('sort_order')
+            ->orderBy('name')
             ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Category Filter Videos
+        |--------------------------------------------------------------------------
+        */
+
+        $categoryVideos = collect();
+
+        if ($selectedCategory) {
+            $categoryVideos = $recommendationService
+                ->categoryVideos(
+                    $selectedCategory->id,
+                    24
+                );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Category Sections
+        |--------------------------------------------------------------------------
+        */
+
+        $categorySections = collect();
+
+        foreach ($categories->take(6) as $category) {
+            $videos = $recommendationService
+                ->categoryVideos(
+                    $category->id,
+                    8
+                );
+
+            if ($videos->isNotEmpty()) {
+                $categorySections->push([
+                    'category' => $category,
+                    'videos' => $videos,
+                ]);
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | View
+        |--------------------------------------------------------------------------
+        */
 
         return view(
             'home',
             compact(
-                'latestVideos',
+                'recommendedVideos',
+                'subscribedVideos',
+                'recentlyWatched',
                 'trendingVideos',
                 'popularVideos',
+                'latestVideos',
                 'categories',
-                'categoryId'
+                'categoryId',
+                'selectedCategory',
+                'categoryVideos',
+                'categorySections'
             )
         );
     }
