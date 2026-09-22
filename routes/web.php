@@ -64,7 +64,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/creator/videos', [VideoController::class, 'store'])->name('videos.store');
 
     //Track Watch Time
-    Route::post('/videos/{video}/watch-time', [VideoController::class, 'trackWatch'])->name('videos.watch-time');
 
     //Subscription Feed
 
@@ -100,13 +99,13 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware('auth')->prefix('creator')->name('creator.')->group(function () {
     Route::get('/', [CreatorController::class, 'dashboard'])->name('dashboard');
-    
+
     /*
     |--------------------------------------------------------------------------
      | Channel Management
     |--------------------------------------------------------------------------
       */
-    
+
     Route::get('/channel/edit', [CreatorChannelController::class, 'edit'])->name('channel.edit');
     Route::put('/channel', [CreatorChannelController::class, 'update'])->name('channel.update');
 
@@ -121,3 +120,9 @@ Route::middleware('auth')->prefix('creator')->name('creator.')->group(function (
     Route::put('/videos/{video}', [CreatorVideoController::class, 'update'])->name('videos.update');
     Route::delete('/videos/{video}', [CreatorVideoController::class, 'destroy'])->name('videos.destroy');
 });
+
+
+Route::post(
+    '/videos/{video}/watch-time',
+    [VideoController::class, 'trackWatch']
+)->name('videos.watch-time');

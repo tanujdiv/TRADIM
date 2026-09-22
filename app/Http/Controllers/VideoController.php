@@ -282,29 +282,7 @@ class VideoController extends Controller
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Count View Once Per Session
-        |--------------------------------------------------------------------------
-        */
-
-        $sessionKey = 'video_viewed_' . $video->id;
-
-        if (!session()->has($sessionKey)) {
-
-            $video->increment('views_count');
-
-            $video->channel->increment(
-                'total_views'
-            );
-
-            session()->put(
-                $sessionKey,
-                true
-            );
-        }
-
-
+        
         /*
         |--------------------------------------------------------------------------
         | Related Videos

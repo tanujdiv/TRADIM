@@ -7,47 +7,58 @@ use App\Models\VideoView;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ViewTrackingService
 {
-    /*
-    |--------------------------------------------------------------------------
-    | View Cooldown
-    |--------------------------------------------------------------------------
-    |
-    | Same viewer can generate another view after 24 hours.
-    |
-    */
-
     private const VIEW_COOLDOWN_HOURS = 24;
-
-    /*
-    |--------------------------------------------------------------------------
-    | Track Video View
-    |--------------------------------------------------------------------------
-    */
 
     public function track(
         Video $video,
         Request $request
     ): bool {
+        Log::info('STEP 22: ViewTrackingService START', [
+            'video_id' => $video->id,
+            'user_id' => Auth::id(),
+            'session_id' => $request->session()->getId(),
+            'ip' => $request->ip(),
+        ]);
+
         /*
         |--------------------------------------------------------------------------
-        | Only Count Published Public Videos
+        | Validate video
         |--------------------------------------------------------------------------
         */
 
-        if (
-            $video->status !== 'published' ||
-            $video->visibility !== 'public' ||
-            !$video->published_at
-        ) {
+        if ($video->status !== 'published') {
+            Log::warning('STEP 22: View NOT tracked - video not published', [
+                'video_id' => $video->id,
+                'status' => $video->status,
+            ]);
+
+            return false;
+        }
+
+        if ($video->visibility !== 'public') {
+            Log::warning('STEP 22: View NOT tracked - video not public', [
+                'video_id' => $video->id,
+                'visibility' => $video->visibility,
+            ]);
+
+            return false;
+        }
+
+        if (!$video->published_at) {
+            Log::warning('STEP 22: View NOT tracked - published_at is NULL', [
+                'video_id' => $video->id,
+            ]);
+
             return false;
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Viewer Identification
+        | Identify viewer
         |--------------------------------------------------------------------------
         */
 
@@ -59,20 +70,30 @@ class ViewTrackingService
 
         $ipHash = hash(
             'sha256',
-            $request->ip() . config('app.key')
+            ($request->ip() ?? '0.0.0.0') . config('app.key')
         );
+
+        Log::info('STEP 22: Viewer identified', [
+            'video_id' => $video->id,
+            'user_id' => $userId,
+            'session_id' => $sessionId,
+            'ip_hash' => $ipHash,
+        ]);
 
         /*
         |--------------------------------------------------------------------------
-        | Transaction
+        | Database transaction
         |--------------------------------------------------------------------------
         */
 
         return DB::transaction(function () use ($video, $userId, $sessionId, $ipHash) {
+            Log::info('STEP 22: Transaction started', [
+                'video_id' => $video->id,
+            ]);
 
             /*
             |--------------------------------------------------------------------------
-            | Find Existing Viewer Record
+            | Find existing view
             |--------------------------------------------------------------------------
             */
 
@@ -84,6 +105,11 @@ class ViewTrackingService
                     'user_id',
                     $userId
                 );
+
+                Log::info('STEP 22: Searching by user_id', [
+                    'video_id' => $video->id,
+                    'user_id' => $userId,
+                ]);
             } else {
                 $viewQuery
                     ->whereNull('user_id')
@@ -91,21 +117,27 @@ class ViewTrackingService
                         'session_id',
                         $sessionId
                     );
-            }
 
-            /*
-            |--------------------------------------------------------------------------
-            | Lock Existing Record
-            |--------------------------------------------------------------------------
-            */
+                Log::info('STEP 22: Searching by session_id', [
+                    'video_id' => $video->id,
+                    'session_id' => $sessionId,
+                ]);
+            }
 
             $view = $viewQuery
                 ->lockForUpdate()
                 ->first();
 
+            Log::info('STEP 22: Existing view lookup result', [
+                'found' => (bool) $view,
+                'view_id' => $view?->id,
+                'last_viewed_at' => $view?->last_viewed_at?->toDateTimeString(),
+                'watched_seconds' => $view?->watched_seconds,
+            ]);
+
             /*
             |--------------------------------------------------------------------------
-            | Existing View Within Cooldown
+            | 24-hour cooldown
             |--------------------------------------------------------------------------
             */
 
@@ -118,12 +150,18 @@ class ViewTrackingService
                     )
                 )
             ) {
+                Log::info('STEP 22: View blocked by 24-hour cooldown', [
+                    'video_id' => $video->id,
+                    'view_id' => $view->id,
+                    'last_viewed_at' => $view->last_viewed_at->toDateTimeString(),
+                ]);
+
                 return false;
             }
 
             /*
             |--------------------------------------------------------------------------
-            | Create / Update View Record
+            | Create new view row
             |--------------------------------------------------------------------------
             */
 
@@ -133,18 +171,50 @@ class ViewTrackingService
                 $view->video_id = $video->id;
                 $view->user_id = $userId;
                 $view->session_id = $sessionId;
-                $view->ip_hash = $ipHash;
-            } else {
-                $view->ip_hash = $ipHash;
+
+                Log::info('STEP 22: Creating NEW VideoView', [
+                    'video_id' => $video->id,
+                    'user_id' => $userId,
+                    'session_id' => $sessionId,
+                ]);
             }
 
+            /*
+            |--------------------------------------------------------------------------
+            | Update tracking fields
+            |--------------------------------------------------------------------------
+            */
+
+            $view->ip_hash = $ipHash;
             $view->last_viewed_at = now();
+
+            Log::info('STEP 22: About to save VideoView', [
+                'view_id' => $view->id,
+                'video_id' => $view->video_id,
+                'user_id' => $view->user_id,
+                'session_id' => $view->session_id,
+                'last_viewed_at' => $view->last_viewed_at?->toDateTimeString(),
+            ]);
 
             $view->save();
 
             /*
             |--------------------------------------------------------------------------
-            | Increment Video Views
+            | Re-read row from database
+            |--------------------------------------------------------------------------
+            */
+
+            $savedView = VideoView::query()
+                ->find($view->id);
+
+            Log::info('STEP 22: VideoView AFTER SAVE', [
+                'view_id' => $savedView?->id,
+                'last_viewed_at' => $savedView?->last_viewed_at?->toDateTimeString(),
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Increment video views
             |--------------------------------------------------------------------------
             */
 
@@ -152,9 +222,13 @@ class ViewTrackingService
                 ->whereKey($video->id)
                 ->increment('views_count');
 
+            Log::info('STEP 22: Video views_count incremented', [
+                'video_id' => $video->id,
+            ]);
+
             /*
             |--------------------------------------------------------------------------
-            | Increment Channel Total Views
+            | Increment channel views
             |--------------------------------------------------------------------------
             */
 
@@ -162,7 +236,16 @@ class ViewTrackingService
                 DB::table('channels')
                     ->where('id', $video->channel_id)
                     ->increment('total_views');
+
+                Log::info('STEP 22: Channel total_views incremented', [
+                    'channel_id' => $video->channel_id,
+                ]);
             }
+
+            Log::info('STEP 22: View TRACKED successfully', [
+                'video_id' => $video->id,
+                'view_id' => $view->id,
+            ]);
 
             return true;
         });

@@ -12,6 +12,13 @@ class VideoView extends Model
 
     protected $table = 'video_views';
 
+    /*
+    |--------------------------------------------------------------------------
+    | Important
+    |--------------------------------------------------------------------------
+    | Table has created_at but does NOT have updated_at.
+    */
+
     public $timestamps = false;
 
     protected $fillable = [

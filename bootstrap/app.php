@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'track.video.view' =>TrackVideoView::class,
+            'track.video.view' => TrackVideoView::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
