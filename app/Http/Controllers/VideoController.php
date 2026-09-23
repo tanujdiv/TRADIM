@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ProcessVideo;
 use App\Models\Category;
 use App\Models\Channel;
 use App\Models\Like;
@@ -131,10 +132,10 @@ class VideoController extends Controller
         | Store Video File
         |--------------------------------------------------------------------------
         */
-
-        $videoPath = $request
-            ->file('video')
-            ->store('videos', 'public');
+        $videoPath = $request->file('video')->store(
+            'videos/source',
+            'public'
+        );
 
 
         /*
@@ -175,7 +176,7 @@ class VideoController extends Controller
                 'duration' => 0,
 
                 'visibility' => $validated['visibility'],
-                'status' => 'published',
+                'status' => 'processing',
 
                 'views_count' => 0,
                 'likes_count' => 0,
@@ -184,6 +185,9 @@ class VideoController extends Controller
 
                 'published_at' => now(),
             ]);
+
+            ProcessVideo::dispatch($video->id)
+                ->onQueue('videos');
 
 
             $channel->increment('video_count');
@@ -282,7 +286,7 @@ class VideoController extends Controller
         }
 
 
-        
+
         /*
         |--------------------------------------------------------------------------
         | Related Videos
