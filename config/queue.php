@@ -46,9 +46,9 @@ return [
 
         'beanstalkd' => [
             'driver' => 'beanstalkd',
-            'host' => env('BEANSTALKD_QUEUE_HOST', 'localhost'),
+            'host' => env('BEANSTALKD_HOST', '127.0.0.1'),
             'queue' => env('BEANSTALKD_QUEUE', 'default'),
-            'retry_after' => (int) env('BEANSTALKD_QUEUE_RETRY_AFTER', 90),
+            'retry_after' => 90,
             'block_for' => 0,
             'after_commit' => false,
         ],
@@ -71,22 +71,6 @@ return [
             'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 90),
             'block_for' => null,
             'after_commit' => false,
-        ],
-
-        'deferred' => [
-            'driver' => 'deferred',
-        ],
-
-        'background' => [
-            'driver' => 'background',
-        ],
-
-        'failover' => [
-            'driver' => 'failover',
-            'connections' => [
-                'database',
-                'deferred',
-            ],
         ],
 
     ],
