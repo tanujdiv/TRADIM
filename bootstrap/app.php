@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\TrackVideoView;
@@ -20,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'track.video.view' => TrackVideoView::class,
             'active.user' => EnsureUserIsActive::class,
             'security.headers' => SecurityHeaders::class,
+            'admin' => EnsureAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

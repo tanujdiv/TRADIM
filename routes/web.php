@@ -13,6 +13,13 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\VideoController;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\ChannelController as AdminChannelController;
+use App\Http\Controllers\Admin\CommentController as AdminCommentController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\VideoController as AdminVideoController;
+
 /*
 |--------------------------------------------------------------------------
 | Public Routes
@@ -128,6 +135,8 @@ Route::post(
 )->name('videos.watch-time');
 
 
+
+
 if (app()->environment('testing')) {
     Route::middleware([
         'auth',
@@ -136,3 +145,36 @@ if (app()->environment('testing')) {
         return response('OK');
     });
 }
+
+
+/*
+|--------------------------------------------------------------------------
+| Admin Panel
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'active.user', 'admin'])->group(function () {
+
+    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::patch('/users/{user}/toggle-status', [AdminUserController::class, 'toggleStatus'])->name('users.toggle-status');
+    Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
+
+    Route::get('/videos', [AdminVideoController::class, 'index'])->name('videos.index');
+    Route::delete('/videos/{video}', [AdminVideoController::class, 'destroy'])->name('videos.destroy');
+
+    Route::get('/channels', [AdminChannelController::class, 'index'])->name('channels.index');
+    Route::delete('/channels/{channel}', [AdminChannelController::class, 'destroy'])->name('channels.destroy');
+
+    Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
+    Route::get('/categories/create', [AdminCategoryController::class, 'create'])->name('categories.create');
+    Route::post('/categories', [AdminCategoryController::class, 'store'])->name('categories.store');
+    Route::get('/categories/{category}/edit', [AdminCategoryController::class, 'edit'])->name('categories.edit');
+    Route::put('/categories/{category}', [AdminCategoryController::class, 'update'])->name('categories.update');
+    Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy'])->name('categories.destroy');
+
+    Route::get('/comments', [AdminCommentController::class, 'index'])->name('comments.index');
+    Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
+
+});
