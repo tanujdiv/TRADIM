@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Video;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class VideoController extends Controller
 {
@@ -18,6 +19,14 @@ class VideoController extends Controller
     public function index(
         Request $request
     ): JsonResponse {
+
+        $perPage = max(
+            1,
+            min(
+                $request->integer('per_page', 12),
+                50
+            )
+        );
 
         $videos = Video::query()
             ->with([
@@ -36,12 +45,7 @@ class VideoController extends Controller
                 'published_at'
             )
             ->latest('published_at')
-            ->paginate(
-                $request->integer(
-                    'per_page',
-                    12
-                )
-            );
+            ->paginate($perPage);
 
 
         return response()->json([
@@ -79,6 +83,10 @@ class VideoController extends Controller
 
             ], 404);
         }
+
+
+       
+        Gate::authorize('view', $video);
 
 
         $video->load([

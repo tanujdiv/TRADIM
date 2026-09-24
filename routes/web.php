@@ -126,3 +126,13 @@ Route::post(
     '/videos/{video}/watch-time',
     [VideoController::class, 'trackWatch']
 )->name('videos.watch-time');
+
+
+if (app()->environment('testing')) {
+    Route::middleware([
+        'auth',
+        'active.user',
+    ])->get('/security-test-active', function () {
+        return response('OK');
+    });
+}

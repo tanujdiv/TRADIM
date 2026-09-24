@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -18,6 +19,7 @@ class CreatorChannelController extends Controller
     public function edit()
     {
         $user = Auth::user();
+
         $channel = $user->channel;
 
         if (!$channel) {
@@ -26,11 +28,14 @@ class CreatorChannelController extends Controller
                 ->with('error', 'Please create your channel first.');
         }
 
+        Gate::authorize('update', $channel);
+
         return view(
             'creator.channel.edit',
             compact('channel')
         );
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -41,6 +46,7 @@ class CreatorChannelController extends Controller
     public function update(Request $request)
     {
         $user = Auth::user();
+
         $channel = $user->channel;
 
         if (!$channel) {
@@ -48,6 +54,8 @@ class CreatorChannelController extends Controller
                 ->route('creator.channel.create')
                 ->with('error', 'Please create your channel first.');
         }
+
+        Gate::authorize('update', $channel);
 
         /*
         |--------------------------------------------------------------------------
@@ -71,6 +79,7 @@ class CreatorChannelController extends Controller
         */
 
         $validated = $request->validate([
+
             'name' => [
                 'required',
                 'string',
@@ -117,6 +126,7 @@ class CreatorChannelController extends Controller
                 'nullable',
                 'boolean',
             ],
+
         ]);
 
         /*
@@ -139,9 +149,7 @@ class CreatorChannelController extends Controller
 
             $avatarPath = $newAvatarPath;
 
-        } elseif (
-            $request->boolean('remove_avatar')
-        ) {
+        } elseif ($request->boolean('remove_avatar')) {
 
             if ($avatarPath) {
                 Storage::disk('public')->delete($avatarPath);
@@ -170,9 +178,7 @@ class CreatorChannelController extends Controller
 
             $bannerPath = $newBannerPath;
 
-        } elseif (
-            $request->boolean('remove_banner')
-        ) {
+        } elseif ($request->boolean('remove_banner')) {
 
             if ($bannerPath) {
                 Storage::disk('public')->delete($bannerPath);
@@ -185,23 +191,25 @@ class CreatorChannelController extends Controller
         |--------------------------------------------------------------------------
         | Update Channel
         |--------------------------------------------------------------------------
-        |
-        | System-managed values such as:
-        | subscriber_count
-        | video_count
-        | total_views
-        | is_verified
-        |
-        | are intentionally NOT updated here.
-        |
         */
 
         $channel->update([
-            'name' => $validated['name'],
-            'handle' => $validated['handle'],
-            'description' => $validated['description'] ?? null,
-            'avatar' => $avatarPath,
-            'banner' => $bannerPath,
+
+            'name' =>
+                $validated['name'],
+
+            'handle' =>
+                $validated['handle'],
+
+            'description' =>
+                $validated['description'] ?? null,
+
+            'avatar' =>
+                $avatarPath,
+
+            'banner' =>
+                $bannerPath,
+
         ]);
 
         return redirect()

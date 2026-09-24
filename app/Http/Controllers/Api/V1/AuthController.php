@@ -200,11 +200,11 @@ class AuthController extends Controller
         | Create Token
         |--------------------------------------------------------------------------
         */
-
         $token = $user->createToken(
-            'tradim-api'
+            'tradim-api',
+            ['*'],
+            now()->addDays(30)
         )->plainTextToken;
-
 
         return response()->json([
 
@@ -280,6 +280,16 @@ class AuthController extends Controller
             'message' =>
                 'Logged out successfully.',
 
+        ]);
+    }
+
+
+    public function logoutAll(Request $request)
+    {
+        $request->user()->tokens()->delete();
+
+        return response()->json([
+            'message' => 'Logged out from all API devices.',
         ]);
     }
 }

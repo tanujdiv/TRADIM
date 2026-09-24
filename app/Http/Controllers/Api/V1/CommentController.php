@@ -8,6 +8,7 @@ use App\Models\Notification;
 use App\Models\Video;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class CommentController extends Controller
 {
@@ -20,6 +21,40 @@ class CommentController extends Controller
     public function index(
         Video $video
     ): JsonResponse {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Video Authorization
+        |--------------------------------------------------------------------------
+        */
+
+        Gate::authorize(
+            'view',
+            $video
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Only Published Videos
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $video->status !== 'published'
+            || !$video->published_at
+        ) {
+
+            return response()->json([
+
+                'success' => false,
+
+                'message' =>
+                    'Video not found.',
+
+            ], 404);
+        }
+
 
         $comments = $video
             ->comments()
@@ -54,6 +89,21 @@ class CommentController extends Controller
         Request $request,
         Video $video
     ): JsonResponse {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Comment Authorization
+        |--------------------------------------------------------------------------
+        */
+
+        Gate::authorize(
+            'create',
+            [
+                Comment::class,
+                $video,
+            ]
+        );
+
 
         $user = $request->user();
 
@@ -93,7 +143,7 @@ class CommentController extends Controller
             if (
                 !$parentComment ||
                 $parentComment->video_id !==
-                    $video->id
+                $video->id
             ) {
 
                 return response()->json([
@@ -147,7 +197,7 @@ class CommentController extends Controller
         if (
             $channelOwnerId &&
             $channelOwnerId !==
-                $user->id
+            $user->id
         ) {
 
             Notification::create([
@@ -242,29 +292,16 @@ class CommentController extends Controller
         Comment $comment
     ): JsonResponse {
 
-        $user = $request->user();
-
-
         /*
         |--------------------------------------------------------------------------
-        | Comment Owner
+        | Comment Ownership
         |--------------------------------------------------------------------------
         */
 
-        if (
-            $comment->user_id !==
-            $user->id
-        ) {
-
-            return response()->json([
-
-                'success' => false,
-
-                'message' =>
-                    'You are not allowed to delete this comment.',
-
-            ], 403);
-        }
+        Gate::authorize(
+            'delete',
+            $comment
+        );
 
 
         $video = $comment->video;

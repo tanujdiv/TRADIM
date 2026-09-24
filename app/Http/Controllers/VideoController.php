@@ -10,12 +10,15 @@ use App\Models\Notification;
 use App\Models\Subscription;
 use App\Models\Video;
 use App\Models\VideoView;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\File;
 
 class VideoController extends Controller
 {
@@ -28,6 +31,9 @@ class VideoController extends Controller
     public function create()
     {
         $user = Auth::user();
+
+        Gate::authorize('create', Video::class);
+
         $channel = $user->channel;
 
         if (!$channel) {
@@ -62,6 +68,7 @@ class VideoController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
+
         $channel = $user->channel;
 
         if (!$channel) {
@@ -70,7 +77,16 @@ class VideoController extends Controller
                 ->with('error', 'Create your channel first.');
         }
 
+        Gate::authorize('create', Video::class);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validation
+        |--------------------------------------------------------------------------
+        */
+
         $validated = $request->validate([
+
             'title' => [
                 'required',
                 'string',
@@ -91,24 +107,32 @@ class VideoController extends Controller
 
             'video' => [
                 'required',
-                'file',
-                'mimetypes:video/mp4,video/webm,video/quicktime,video/x-msvideo',
-                'max:131072',
+                File::types([
+                    'mp4',
+                    'mov',
+                    'webm',
+                    'avi',
+                ])->max('512mb'),
             ],
 
             'thumbnail' => [
                 'nullable',
-                'image',
-                'mimes:jpg,jpeg,png,webp',
-                'max:10240',
+                File::image()
+                    ->types([
+                        'jpg',
+                        'jpeg',
+                        'png',
+                        'webp',
+                    ])
+                    ->max('10mb'),
             ],
 
             'visibility' => [
                 'required',
                 'in:public,unlisted,private',
             ],
-        ]);
 
+        ]);
 
         /*
         |--------------------------------------------------------------------------
@@ -118,6 +142,10 @@ class VideoController extends Controller
 
         $slug = Str::slug($validated['title']);
 
+        if ($slug === '') {
+            $slug = 'video-' . Str::lower(Str::random(12));
+        }
+
         $originalSlug = $slug;
         $counter = 1;
 
@@ -126,76 +154,142 @@ class VideoController extends Controller
             $counter++;
         }
 
-
         /*
         |--------------------------------------------------------------------------
         | Store Video File
         |--------------------------------------------------------------------------
         */
-        $videoPath = $request->file('video')->store(
-            'videos/source',
-            'public'
-        );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Store Thumbnail
-        |--------------------------------------------------------------------------
-        */
-
+        $videoPath = null;
         $thumbnailPath = null;
 
-        if ($request->hasFile('thumbnail')) {
-            $thumbnailPath = $request
-                ->file('thumbnail')
-                ->store('thumbnails', 'public');
-        }
+        try {
 
+            $videoPath = $request
+                ->file('video')
+                ->store(
+                    'videos/source',
+                    'public'
+                );
+
+            if (!$videoPath) {
+                throw new \RuntimeException(
+                    'Video upload failed.'
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Store Thumbnail
+            |--------------------------------------------------------------------------
+            */
+
+            if ($request->hasFile('thumbnail')) {
+
+                $thumbnailPath = $request
+                    ->file('thumbnail')
+                    ->store(
+                        'thumbnails',
+                        'public'
+                    );
+
+                if (!$thumbnailPath) {
+                    throw new \RuntimeException(
+                        'Thumbnail upload failed.'
+                    );
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Create Video
+            |--------------------------------------------------------------------------
+            */
+
+            $video = DB::transaction(
+                function () use ($user, $channel, $validated, $slug, $videoPath, $thumbnailPath) {
+
+                    $video = Video::create([
+
+                        'user_id' => $user->id,
+
+                        'channel_id' => $channel->id,
+
+                        'category_id' =>
+                            $validated['category_id'] ?? null,
+
+                        'title' => $validated['title'],
+
+                        'slug' => $slug,
+
+                        'description' =>
+                            $validated['description'] ?? null,
+
+                        'video_path' => $videoPath,
+
+                        'thumbnail_path' => $thumbnailPath,
+
+                        'duration' => 0,
+
+                        'visibility' =>
+                            $validated['visibility'],
+
+                        'status' => 'processing',
+
+                        'views_count' => 0,
+
+                        'likes_count' => 0,
+
+                        'dislikes_count' => 0,
+
+                        'comments_count' => 0,
+
+                        'published_at' => now(),
+
+                    ]);
+
+                    $channel->increment('video_count');
+
+                    return $video;
+                }
+            );
+
+        } catch (\Throwable $exception) {
+
+            if (
+                $videoPath &&
+                Storage::disk('public')->exists($videoPath)
+            ) {
+                Storage::disk('public')->delete($videoPath);
+            }
+
+            if (
+                $thumbnailPath &&
+                Storage::disk('public')->exists($thumbnailPath)
+            ) {
+                Storage::disk('public')->delete($thumbnailPath);
+            }
+
+            report($exception);
+
+            return back()
+                ->withInput(
+                    $request->except('video', 'thumbnail')
+                )
+                ->with(
+                    'error',
+                    'Video upload failed. Please try again.'
+                );
+        }
 
         /*
         |--------------------------------------------------------------------------
-        | Create Video
+        | Process Video
         |--------------------------------------------------------------------------
         */
 
-        $video = DB::transaction(function () use ($user, $channel, $validated, $slug, $videoPath, $thumbnailPath) {
-
-            $video = Video::create([
-                'user_id' => $user->id,
-                'channel_id' => $channel->id,
-                'category_id' => $validated['category_id'] ?? null,
-
-                'title' => $validated['title'],
-                'slug' => $slug,
-                'description' => $validated['description'] ?? null,
-
-                'video_path' => $videoPath,
-                'thumbnail_path' => $thumbnailPath,
-
-                'duration' => 0,
-
-                'visibility' => $validated['visibility'],
-                'status' => 'processing',
-
-                'views_count' => 0,
-                'likes_count' => 0,
-                'dislikes_count' => 0,
-                'comments_count' => 0,
-
-                'published_at' => now(),
-            ]);
-
-            ProcessVideo::dispatch($video->id)
-                ->onQueue('videos');
-
-
-            $channel->increment('video_count');
-
-
-            return $video;
-        });
-
+        ProcessVideo::dispatch($video->id)
+            ->onQueue('videos');
 
         /*
         |--------------------------------------------------------------------------
@@ -208,10 +302,10 @@ class VideoController extends Controller
             $channel->id
         )->pluck('user_id');
 
-
         foreach ($subscriberIds as $subscriberId) {
 
             Notification::create([
+
                 'user_id' => $subscriberId,
 
                 'type' => 'new_video',
@@ -233,15 +327,9 @@ class VideoController extends Controller
                 'is_read' => false,
 
                 'read_at' => null,
+
             ]);
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Redirect
-        |--------------------------------------------------------------------------
-        */
 
         return redirect()
             ->route('creator.dashboard')
@@ -268,24 +356,23 @@ class VideoController extends Controller
             ->where('status', 'published')
             ->firstOrFail();
 
-
         /*
         |--------------------------------------------------------------------------
         | Private Video Access
         |--------------------------------------------------------------------------
         */
 
-        if ($video->visibility === 'private') {
-
-            if (
-                !Auth::check()
-                || Auth::id() !== $video->user_id
-            ) {
-                abort(404);
-            }
+        if (
+            $video->visibility === 'private' &&
+            (
+                !Auth::check() ||
+                Auth::id() !== $video->user_id
+            )
+        ) {
+            abort(404);
         }
 
-
+        Gate::authorize('view', $video);
 
         /*
         |--------------------------------------------------------------------------
@@ -313,7 +400,6 @@ class VideoController extends Controller
             ->take(12)
             ->get();
 
-
         return view(
             'videos.show',
             compact(
@@ -335,7 +421,20 @@ class VideoController extends Controller
         Video $video
     ): JsonResponse {
 
+        Gate::authorize('view', $video);
+
+        if (
+            $video->status !== 'published' ||
+            !$video->published_at
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Video not found.',
+            ], 404);
+        }
+
         $validated = $request->validate([
+
             'watched_seconds' => [
                 'required',
                 'integer',
@@ -353,11 +452,10 @@ class VideoController extends Controller
                 'nullable',
                 'boolean',
             ],
+
         ]);
 
-
         $userId = Auth::id();
-
 
         /*
         |--------------------------------------------------------------------------
@@ -371,7 +469,6 @@ class VideoController extends Controller
             $sessionId = 'guest_' . Str::uuid();
         }
 
-
         /*
         |--------------------------------------------------------------------------
         | IP Hash
@@ -383,7 +480,6 @@ class VideoController extends Controller
             $request->ip() ?? '0.0.0.0'
         );
 
-
         /*
         |--------------------------------------------------------------------------
         | Find Existing View
@@ -394,7 +490,6 @@ class VideoController extends Controller
             'video_id',
             $video->id
         );
-
 
         if ($userId) {
 
@@ -413,9 +508,7 @@ class VideoController extends Controller
                 );
         }
 
-
         $view = $viewQuery->first();
-
 
         /*
         |--------------------------------------------------------------------------
@@ -426,6 +519,7 @@ class VideoController extends Controller
         if (!$view) {
 
             $view = VideoView::create([
+
                 'video_id' => $video->id,
 
                 'user_id' => $userId,
@@ -434,7 +528,8 @@ class VideoController extends Controller
 
                 'ip_hash' => $ipHash,
 
-                'last_position' => $validated['last_position'],
+                'last_position' =>
+                    $validated['last_position'],
 
                 'watched_seconds' =>
                     $validated['watched_seconds'],
@@ -443,6 +538,7 @@ class VideoController extends Controller
                     (bool) (
                         $validated['completed'] ?? false
                     ),
+
             ]);
 
         } else {
@@ -455,24 +551,24 @@ class VideoController extends Controller
                 );
             }
 
-
             $view->update([
+
                 'last_position' =>
                     $validated['last_position'],
 
                 'completed' =>
-                    $view->completed
-                    || (bool) (
+                    $view->completed ||
+                    (bool) (
                         $validated['completed'] ?? false
                     ),
-            ]);
 
+            ]);
 
             $view->refresh();
         }
 
-
         return response()->json([
+
             'success' => true,
 
             'watched_seconds' =>
@@ -480,6 +576,7 @@ class VideoController extends Controller
 
             'last_position' =>
                 (int) $view->last_position,
+
         ]);
     }
 
@@ -497,8 +594,16 @@ class VideoController extends Controller
 
         $user = Auth::user();
 
-        $type = $request->input('type');
+        Gate::authorize('view', $video);
 
+        if (
+            $video->status !== 'published' ||
+            !$video->published_at
+        ) {
+            abort(404);
+        }
+
+        $type = $request->input('type');
 
         if (
             !in_array(
@@ -510,7 +615,6 @@ class VideoController extends Controller
             return back();
         }
 
-
         $existingLike = Like::where(
             'user_id',
             $user->id
@@ -521,9 +625,7 @@ class VideoController extends Controller
             )
             ->first();
 
-
         $shouldNotify = false;
-
 
         /*
         |--------------------------------------------------------------------------
@@ -532,20 +634,19 @@ class VideoController extends Controller
         */
 
         if (
-            $existingLike
-            && $existingLike->type === $type
+            $existingLike &&
+            $existingLike->type === $type
         ) {
 
             $existingLike->delete();
 
-        }
+        } elseif ($existingLike) {
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Change Reaction
-        |--------------------------------------------------------------------------
-        */ elseif ($existingLike) {
+            /*
+            |--------------------------------------------------------------------------
+            | Change Reaction
+            |--------------------------------------------------------------------------
+            */
 
             $oldType = $existingLike->type;
 
@@ -553,37 +654,35 @@ class VideoController extends Controller
                 'type' => $type,
             ]);
 
-
             if (
-                $oldType !== 'like'
-                && $type === 'like'
+                $oldType !== 'like' &&
+                $type === 'like'
             ) {
                 $shouldNotify = true;
             }
 
-        }
+        } else {
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | New Reaction
-        |--------------------------------------------------------------------------
-        */ else {
+            /*
+            |--------------------------------------------------------------------------
+            | New Reaction
+            |--------------------------------------------------------------------------
+            */
 
             Like::create([
+
                 'user_id' => $user->id,
 
                 'video_id' => $video->id,
 
                 'type' => $type,
-            ]);
 
+            ]);
 
             if ($type === 'like') {
                 $shouldNotify = true;
             }
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -592,6 +691,7 @@ class VideoController extends Controller
         */
 
         $video->update([
+
             'likes_count' =>
                 $video->likes()
                     ->where('type', 'like')
@@ -601,8 +701,8 @@ class VideoController extends Controller
                 $video->likes()
                     ->where('type', 'dislike')
                     ->count(),
-        ]);
 
+        ]);
 
         /*
         |--------------------------------------------------------------------------
@@ -615,13 +715,13 @@ class VideoController extends Controller
             $channelOwnerId =
                 $video->channel?->user_id;
 
-
             if (
-                $channelOwnerId
-                && $channelOwnerId !== $user->id
+                $channelOwnerId &&
+                $channelOwnerId !== $user->id
             ) {
 
                 Notification::create([
+
                     'user_id' =>
                         $channelOwnerId,
 
@@ -651,10 +751,10 @@ class VideoController extends Controller
 
                     'read_at' =>
                         null,
+
                 ]);
             }
         }
-
 
         return back();
     }
@@ -673,23 +773,19 @@ class VideoController extends Controller
 
         $user = Auth::user();
 
-
         /*
         |--------------------------------------------------------------------------
         | Prevent Self Subscription
         |--------------------------------------------------------------------------
         */
 
-        if (
-            $channel->user_id === $user->id
-        ) {
+        if ($channel->user_id === $user->id) {
 
             return back()->with(
                 'error',
                 'You cannot subscribe to your own channel.'
             );
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -707,11 +803,9 @@ class VideoController extends Controller
             )
             ->first();
 
-
         if ($subscription) {
 
             $subscription->delete();
-
 
             if ($channel->subscriber_count > 0) {
 
@@ -720,13 +814,11 @@ class VideoController extends Controller
                 );
             }
 
-
             return back()->with(
                 'success',
                 'Unsubscribed successfully.'
             );
         }
-
 
         /*
         |--------------------------------------------------------------------------
@@ -735,18 +827,16 @@ class VideoController extends Controller
         */
 
         Subscription::create([
-            'user_id' =>
-                $user->id,
 
-            'channel_id' =>
-                $channel->id,
+            'user_id' => $user->id,
+
+            'channel_id' => $channel->id,
+
         ]);
-
 
         $channel->increment(
             'subscriber_count'
         );
-
 
         /*
         |--------------------------------------------------------------------------
@@ -755,6 +845,7 @@ class VideoController extends Controller
         */
 
         Notification::create([
+
             'user_id' =>
                 $channel->user_id,
 
@@ -782,8 +873,8 @@ class VideoController extends Controller
 
             'read_at' =>
                 null,
-        ]);
 
+        ]);
 
         return back()->with(
             'success',

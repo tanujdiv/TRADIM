@@ -13,9 +13,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | Tradim API V1
 |--------------------------------------------------------------------------
-|
 | All API routes are versioned under /api/v1.
-|
 */
 
 
@@ -27,18 +25,17 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1/auth')->group(function () {
 
-    Route::post(
-        '/register',
-        [AuthController::class, 'register']
-    )->name('api.v1.auth.register');
+    Route::post('/register', [AuthController::class, 'register'])->name('api.v1.auth.register')->middleware('throttle:tradim-register');
 
-    Route::post(
-        '/login',
-        [AuthController::class, 'login']
-    )->name('api.v1.auth.login');
+    Route::post('/login', [AuthController::class, 'login'])->name('api.v1.auth.login')->middleware('throttle:tradim-login');
+
 
 });
 
+Route::post('/auth/logout-all', [
+    AuthController::class,
+    'logoutAll',
+]);
 
 /*
 |--------------------------------------------------------------------------
@@ -46,7 +43,7 @@ Route::prefix('v1/auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->middleware('throttle:tradim-api')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
@@ -54,15 +51,9 @@ Route::prefix('v1')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::get(
-        '/videos',
-        [VideoController::class, 'index']
-    )->name('api.v1.videos.index');
+    Route::get('/videos', [VideoController::class, 'index'])->name('api.v1.videos.index');
 
-    Route::get(
-        '/videos/{video}',
-        [VideoController::class, 'show']
-    )->name('api.v1.videos.show');
+    Route::get('/videos/{video}', [VideoController::class, 'show'])->name('api.v1.videos.show');
 
 
     /*
@@ -71,15 +62,9 @@ Route::prefix('v1')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::get(
-        '/categories',
-        [CategoryController::class, 'index']
-    )->name('api.v1.categories.index');
+    Route::get('/categories', [CategoryController::class, 'index'])->name('api.v1.categories.index');
 
-    Route::get(
-        '/categories/{category}',
-        [CategoryController::class, 'show']
-    )->name('api.v1.categories.show');
+    Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('api.v1.categories.show');
 
 
     /*
@@ -88,10 +73,7 @@ Route::prefix('v1')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::get(
-        '/channels/{channel}',
-        [ChannelController::class, 'show']
-    )->name('api.v1.channels.show');
+    Route::get('/channels/{channel}', [ChannelController::class, 'show'])->name('api.v1.channels.show');
 
 });
 
@@ -102,81 +84,51 @@ Route::prefix('v1')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('v1')
-    ->middleware('auth:sanctum')
-    ->group(function () {
+Route::prefix('v1')->middleware(['auth:sanctum', 'active.user', 'throttle:tradim-api'])->group(function () {
 
-        /*
-        |--------------------------------------------------------------------------
-        | Authentication
-        |--------------------------------------------------------------------------
-        */
+    /*
+    |--------------------------------------------------------------------------
+    | Authentication
+    |--------------------------------------------------------------------------
+    */
 
-        Route::post(
-            '/auth/logout',
-            [AuthController::class, 'logout']
-        )->name('api.v1.auth.logout');
+    Route::post('/auth/logout', [AuthController::class, 'logout'])->name('api.v1.auth.logout');
 
-        Route::get(
-            '/auth/me',
-            [AuthController::class, 'me']
-        )->name('api.v1.auth.me');
+    Route::get('/auth/me', [AuthController::class, 'me'])->name('api.v1.auth.me');
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Subscriptions
-        |--------------------------------------------------------------------------
-        */
+    /*
+    |--------------------------------------------------------------------------
+    | Subscriptions
+    |--------------------------------------------------------------------------
+    */
 
-        Route::post(
-            '/channels/{channel}/subscribe',
-            [SubscriptionController::class, 'store']
-        )->name('api.v1.channels.subscribe');
+    Route::post('/channels/{channel}/subscribe', [SubscriptionController::class, 'store'])->middleware('throttle:tradim-interaction')->name('api.v1.channels.subscribe');
 
-        Route::delete(
-            '/channels/{channel}/subscribe',
-            [SubscriptionController::class, 'destroy']
-        )->name('api.v1.channels.unsubscribe');
+    Route::delete('/channels/{channel}/subscribe', [SubscriptionController::class, 'destroy'])->middleware('throttle:tradim-interaction')->name('api.v1.channels.unsubscribe');
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Likes / Dislikes
-        |--------------------------------------------------------------------------
-        */
+    /*
+    |--------------------------------------------------------------------------
+    | Likes / Dislikes
+    |--------------------------------------------------------------------------
+    */
 
-        Route::post(
-            '/videos/{video}/like',
-            [LikeController::class, 'store']
-        )->name('api.v1.videos.like');
+    Route::post('/videos/{video}/like', [LikeController::class, 'store'])->middleware('throttle:tradim-interaction')->name('api.v1.videos.like');
 
-        Route::delete(
-            '/videos/{video}/like',
-            [LikeController::class, 'destroy']
-        )->name('api.v1.videos.unlike');
+    Route::delete('/videos/{video}/like', [LikeController::class, 'destroy'])->middleware('throttle:tradim-interaction')->name('api.v1.videos.unlike');
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Comments
-        |--------------------------------------------------------------------------
-        */
+    /*
+    |--------------------------------------------------------------------------
+    | Comments
+    |--------------------------------------------------------------------------
+    */
 
-        Route::get(
-            '/videos/{video}/comments',
-            [CommentController::class, 'index']
-        )->withoutMiddleware('auth:sanctum')
-            ->name('api.v1.videos.comments.index');
+    Route::get('/videos/{video}/comments', [CommentController::class, 'index'])->withoutMiddleware(['auth:sanctum', 'active.user'])->name('api.v1.videos.comments.index');
 
-        Route::post(
-            '/videos/{video}/comments',
-            [CommentController::class, 'store']
-        )->name('api.v1.videos.comments.store');
+    Route::post('/videos/{video}/comments', [CommentController::class, 'store'])->middleware('throttle:tradim-interaction')->name('api.v1.videos.comments.store');
 
-        Route::delete(
-            '/comments/{comment}',
-            [CommentController::class, 'destroy']
-        )->name('api.v1.comments.destroy');
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->middleware('throttle:tradim-interaction')->name('api.v1.comments.destroy');
 
-    });
+});

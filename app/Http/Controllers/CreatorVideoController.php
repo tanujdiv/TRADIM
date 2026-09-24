@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Video;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
 class CreatorVideoController extends Controller
@@ -27,6 +28,8 @@ class CreatorVideoController extends Controller
                 ->route('creator.channel.create')
                 ->with('error', 'Create your channel first.');
         }
+
+        Gate::authorize('view', $channel);
 
         $videos = Video::with('category')
             ->where('channel_id', $channel->id)
@@ -58,15 +61,7 @@ class CreatorVideoController extends Controller
                 ->with('error', 'Create your channel first.');
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Security
-        |--------------------------------------------------------------------------
-        */
-
-        if ($video->channel_id !== $channel->id) {
-            abort(403);
-        }
+        Gate::authorize('update', $video);
 
         $categories = Category::where('is_active', true)
             ->orderBy('sort_order')
@@ -103,15 +98,7 @@ class CreatorVideoController extends Controller
                 ->with('error', 'Create your channel first.');
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Security
-        |--------------------------------------------------------------------------
-        */
-
-        if ($video->channel_id !== $channel->id) {
-            abort(403);
-        }
+        Gate::authorize('update', $video);
 
         /*
         |--------------------------------------------------------------------------
@@ -168,9 +155,9 @@ class CreatorVideoController extends Controller
 
         if ($request->hasFile('thumbnail')) {
 
-            /*
-            | Delete old thumbnail
-            */
+            $newThumbnailPath = $request
+                ->file('thumbnail')
+                ->store('thumbnails', 'public');
 
             if (
                 $thumbnailPath &&
@@ -181,16 +168,7 @@ class CreatorVideoController extends Controller
                 );
             }
 
-            /*
-            | Store new thumbnail
-            */
-
-            $thumbnailPath = $request
-                ->file('thumbnail')
-                ->store(
-                    'thumbnails',
-                    'public'
-                );
+            $thumbnailPath = $newThumbnailPath;
         }
 
         /*
@@ -203,20 +181,11 @@ class CreatorVideoController extends Controller
 
         if ($validated['status'] === 'published') {
 
-            /*
-            | If video is being published for the first time,
-            | set current date/time.
-            */
-
             if (!$publishedAt) {
                 $publishedAt = now();
             }
 
         } else {
-
-            /*
-            | Draft videos should not have a published date.
-            */
 
             $publishedAt = null;
         }
@@ -279,15 +248,7 @@ class CreatorVideoController extends Controller
                 ->with('error', 'Create your channel first.');
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Security
-        |--------------------------------------------------------------------------
-        */
-
-        if ($video->channel_id !== $channel->id) {
-            abort(403);
-        }
+        Gate::authorize('delete', $video);
 
         /*
         |--------------------------------------------------------------------------
