@@ -20,6 +20,8 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\VideoController as AdminVideoController;
 
+use App\Http\Controllers\ReportController;
+
 /*
 |--------------------------------------------------------------------------
 | Public Routes
@@ -176,5 +178,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active.user', 'admi
 
     Route::get('/comments', [AdminCommentController::class, 'index'])->name('comments.index');
     Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
+
+});
+
+
+Route::middleware(['auth','active.user',])->group(function () {
+
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+
+    Route::get('/report/{type}/{id}', [ReportController::class, 'create'])->name('reports.create');
+
+    Route::post('/reports', [ReportController::class, 'store'])->middleware('throttle:tradim-reports')->name('reports.store');
 
 });

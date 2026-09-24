@@ -62,5 +62,10 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(30)
                 ->by('interaction:' . $request->user()->id);
         });
+
+        RateLimiter::for('tradim-reports', function (Request $request) {
+            return Limit::perHour(10)
+                ->by('report-user:' . $request->user()->id);
+        });
     }
 }
