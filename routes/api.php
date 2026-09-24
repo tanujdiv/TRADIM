@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\ChannelController;
 use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\LikeController;
+use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\SubscriptionController;
 use App\Http\Controllers\Api\V1\VideoController;
 use Illuminate\Support\Facades\Route;
@@ -29,13 +30,8 @@ Route::prefix('v1/auth')->group(function () {
 
     Route::post('/login', [AuthController::class, 'login'])->name('api.v1.auth.login')->middleware('throttle:tradim-login');
 
-
 });
 
-Route::post('/auth/logout-all', [
-    AuthController::class,
-    'logoutAll',
-]);
 
 /*
 |--------------------------------------------------------------------------
@@ -75,6 +71,15 @@ Route::prefix('v1')->middleware('throttle:tradim-api')->group(function () {
 
     Route::get('/channels/{channel}', [ChannelController::class, 'show'])->name('api.v1.channels.show');
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Public Comments
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/videos/{video}/comments', [CommentController::class, 'index'])->name('api.v1.videos.comments.index');
+
 });
 
 
@@ -93,6 +98,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user', 'throttle:tradim
     */
 
     Route::post('/auth/logout', [AuthController::class, 'logout'])->name('api.v1.auth.logout');
+
+    Route::post('/auth/logout-all', [AuthController::class, 'logoutAll'])->name('api.v1.auth.logout-all');
 
     Route::get('/auth/me', [AuthController::class, 'me'])->name('api.v1.auth.me');
 
@@ -125,10 +132,19 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user', 'throttle:tradim
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/videos/{video}/comments', [CommentController::class, 'index'])->withoutMiddleware(['auth:sanctum', 'active.user'])->name('api.v1.videos.comments.index');
-
     Route::post('/videos/{video}/comments', [CommentController::class, 'store'])->middleware('throttle:tradim-interaction')->name('api.v1.videos.comments.store');
 
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->middleware('throttle:tradim-interaction')->name('api.v1.comments.destroy');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reporting System - Step 28
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/reports', [ReportController::class, 'index'])->name('api.v1.reports.index');
+
+    Route::post('/reports', [ReportController::class, 'store'])->middleware('throttle:tradim-reports')->name('api.v1.reports.store');
 
 });
