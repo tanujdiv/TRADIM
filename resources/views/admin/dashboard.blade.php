@@ -26,6 +26,7 @@
                 ['Processing', $stats['processing_videos']],
                 ['Categories', $stats['categories']],
                 ['Comments', $stats['comments']],
+                ['Pending Reports', $stats['pending_reports']],
             ];
         @endphp
 

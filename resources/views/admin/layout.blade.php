@@ -241,6 +241,11 @@
                     Comments
                 </a>
 
+                <a href="{{ route('admin.reports.index') }}"
+                    class="{{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+                    Reports
+                </a>
+
                 <hr class="border-secondary opacity-25">
 
                 <a href="{{ route('home') }}">

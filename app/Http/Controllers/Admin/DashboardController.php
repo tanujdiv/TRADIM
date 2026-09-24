@@ -9,6 +9,7 @@ use App\Models\Comment;
 use App\Models\User;
 use App\Models\Video;
 use Illuminate\View\View;
+use App\Models\Report;
 
 class DashboardController extends Controller
 {
@@ -39,6 +40,11 @@ class DashboardController extends Controller
             'categories' => Category::count(),
 
             'comments' => Comment::count(),
+
+            'pending_reports' => Report::where(
+                'status',
+                'pending'
+            )->count(),
         ];
 
         $latestUsers = User::query()

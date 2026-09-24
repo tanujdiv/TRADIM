@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\VideoController as AdminVideoController;
 
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\Admin\ReportController as AdminReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -179,15 +180,23 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active.user', 'admi
     Route::get('/comments', [AdminCommentController::class, 'index'])->name('comments.index');
     Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
 
+    Route::get('/reports', [AdminReportController::class, 'index'])->name('reports.index');
+
+    Route::get('/reports/{report}', [AdminReportController::class, 'show'])->name('reports.show');
+
+    Route::patch('/reports/{report}', [AdminReportController::class, 'update'])->name('reports.update');
+
 });
 
 
-Route::middleware(['auth','active.user',])->group(function () {
+Route::middleware(['auth', 'active.user',])->group(function () {
 
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
 
     Route::get('/report/{type}/{id}', [ReportController::class, 'create'])->name('reports.create');
 
     Route::post('/reports', [ReportController::class, 'store'])->middleware('throttle:tradim-reports')->name('reports.store');
+
+
 
 });
