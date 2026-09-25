@@ -272,15 +272,16 @@
             </a>
 
 
-            <a href="#" class="sidebar-link">
+            @auth
+                <a href="{{ route('reports.index') }}"
+                    class="sidebar-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
 
-                <i class="bi bi-flag"></i>
+                    <i class="bi bi-flag"></i>
 
-                <span>
-                    Report
-                </span>
+                    <span>My Reports</span>
 
-            </a>
+                </a>
+            @endauth
 
 
             <a href="#" class="sidebar-link">
