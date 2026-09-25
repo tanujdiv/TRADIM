@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\LikeController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\SubscriptionController;
 use App\Http\Controllers\Api\V1\VideoController;
+use App\Http\Controllers\Api\V1\SearchController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -102,6 +103,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'active.user', 'throttle:tradim
     Route::post('/auth/logout-all', [AuthController::class, 'logoutAll'])->name('api.v1.auth.logout-all');
 
     Route::get('/auth/me', [AuthController::class, 'me'])->name('api.v1.auth.me');
+
+    Route::get('/search', [SearchController::class, 'index'])->name('api.v1.search');
 
 
     /*
