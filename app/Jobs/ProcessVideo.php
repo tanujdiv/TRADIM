@@ -13,6 +13,12 @@ class ProcessVideo implements ShouldQueue
 {
     use Queueable;
 
+    /*
+    |--------------------------------------------------------------------------
+    | Queue Configuration
+    |--------------------------------------------------------------------------
+    */
+
     public int $tries = 3;
 
     public int $timeout = 3600;
@@ -23,11 +29,50 @@ class ProcessVideo implements ShouldQueue
         60,
     ];
 
+    /*
+    |--------------------------------------------------------------------------
+    | Constructor
+    |--------------------------------------------------------------------------
+    */
+
     public function __construct(
         public int $videoId
     ) {
-        $this->onQueue('videos');
+        /*
+        |--------------------------------------------------------------------------
+        | Dedicated Redis Connection
+        |--------------------------------------------------------------------------
+        */
+
+        $this->onConnection('redis_video');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Dedicated Video Processing Queue
+        |--------------------------------------------------------------------------
+        */
+
+        $this->onQueue(
+            config(
+                'tradim.queues.video',
+                'video-processing'
+            )
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Dispatch After Database Commit
+        |--------------------------------------------------------------------------
+        */
+
+        $this->afterCommit();
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Handle Job
+    |--------------------------------------------------------------------------
+    */
 
     public function handle(
         VideoProcessingService $processingService
@@ -35,11 +80,37 @@ class ProcessVideo implements ShouldQueue
         $video = Video::query()
             ->find($this->videoId);
 
+        /*
+        |--------------------------------------------------------------------------
+        | Video Not Found
+        |--------------------------------------------------------------------------
+        */
+
         if (!$video) {
+
             Log::warning(
-                'STEP 24: Video not found for processing',
+                'Video not found for processing',
                 [
                     'video_id' => $this->videoId,
+                    'attempt' => $this->attempts(),
+                ]
+            );
+
+            return;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Skip Already Completed Video
+        |--------------------------------------------------------------------------
+        */
+
+        if ($video->status === 'ready') {
+
+            Log::info(
+                'Video processing skipped because video is already ready',
+                [
+                    'video_id' => $video->id,
                 ]
             );
 
@@ -47,36 +118,71 @@ class ProcessVideo implements ShouldQueue
         }
 
         Log::info(
-            'STEP 24: Video processing job started',
+            'Video processing job started',
             [
                 'video_id' => $video->id,
+                'attempt' => $this->attempts(),
+                'queue' => $this->queue,
+                'connection' => $this->connection,
             ]
         );
 
-        try {
-            $processingService->process($video);
-        } catch (Throwable $exception) {
-            $video->update([
-                'status' => 'failed',
-            ]);
+        /*
+        |--------------------------------------------------------------------------
+        | Processing
+        |--------------------------------------------------------------------------
+        */
 
-            Log::error(
-                'STEP 24: Video processing failed',
+        try {
+
+            $processingService->process($video);
+
+            Log::info(
+                'Video processing job completed',
                 [
                     'video_id' => $video->id,
+                    'attempt' => $this->attempts(),
+                ]
+            );
+
+        } catch (Throwable $exception) {
+
+            Log::error(
+                'Video processing attempt failed',
+                [
+                    'video_id' => $video->id,
+                    'attempt' => $this->attempts(),
+                    'max_attempts' => $this->tries,
                     'message' => $exception->getMessage(),
                     'file' => $exception->getFile(),
                     'line' => $exception->getLine(),
                 ]
             );
 
+            /*
+            |--------------------------------------------------------------------------
+            | Re-throw
+            |--------------------------------------------------------------------------
+            |
+            | Laravel needs the exception so that the queue worker
+            | can retry the job according to $tries and $backoff.
+            |
+            */
+
             throw $exception;
         }
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Permanently Failed
+    |--------------------------------------------------------------------------
+    */
+
     public function failed(
         Throwable $exception
     ): void {
+
         Video::query()
             ->whereKey($this->videoId)
             ->update([
@@ -84,10 +190,13 @@ class ProcessVideo implements ShouldQueue
             ]);
 
         Log::error(
-            'STEP 24: Video processing permanently failed',
+            'Video processing permanently failed',
             [
                 'video_id' => $this->videoId,
+                'attempts' => $this->tries,
                 'message' => $exception->getMessage(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
             ]
         );
     }
