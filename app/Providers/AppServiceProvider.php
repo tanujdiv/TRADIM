@@ -3,10 +3,10 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Pagination\Paginator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Paginator::useBootstrapFive();
 
         RateLimiter::for('tradim-login', function (Request $request) {
             $email = mb_strtolower(
@@ -33,7 +34,6 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perMinute(5)->by(
                     'login-email:' . sha1($email) . ':' . $request->ip()
                 ),
-
                 Limit::perMinute(20)->by(
                     'login-ip:' . $request->ip()
                 ),
