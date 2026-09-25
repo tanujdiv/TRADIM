@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Services\SearchFilterCacheService;
 
 class Category extends Model
 {
@@ -36,5 +37,16 @@ class Category extends Model
     public function videos(): HasMany
     {
         return $this->hasMany(Video::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(function (Category $category): void {
+            app(SearchFilterCacheService::class)->clear();
+        });
+
+        static::deleted(function (Category $category): void {
+            app(SearchFilterCacheService::class)->clear();
+        });
     }
 }

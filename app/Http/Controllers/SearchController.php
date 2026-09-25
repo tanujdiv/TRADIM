@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
 use App\Models\Channel;
 use App\Models\Video;
 use Illuminate\Http\Request;
+use App\Services\SearchFilterCacheService;
 
 class SearchController extends Controller
 {
@@ -15,7 +15,7 @@ class SearchController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function index(Request $request)
+    public function index(Request $request, SearchFilterCacheService $filterCache)
     {
         $query = trim(
             (string) $request->input('q', '')
@@ -75,12 +75,7 @@ class SearchController extends Controller
             $perPage = 12;
         }
 
-        $categories = Category::query()
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
-
+        $categories = $filterCache->categories();
         /*
         |--------------------------------------------------------------------------
         | Empty Search
