@@ -77,11 +77,10 @@ return [
             'driver' => 'redis',
             'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
             'queue' => env('TRADIM_VIDEO_QUEUE', 'video-processing'),
-            'retry_after' => 1860,
+            'retry_after' => 3660,
             'block_for' => 5,
             'after_commit' => true,
         ],
-
     ],
 
     /*

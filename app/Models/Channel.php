@@ -22,6 +22,7 @@ class Channel extends Model
         'video_count',
         'total_views',
         'is_verified',
+        'slug',
     ];
 
     protected function casts(): array
