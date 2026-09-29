@@ -288,9 +288,7 @@ class VideoController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        ProcessVideo::dispatch($video->id)
-            ->onQueue('videos');
-
+        ProcessVideo::dispatch($video->id);
         /*
         |--------------------------------------------------------------------------
         | Notify Subscribers

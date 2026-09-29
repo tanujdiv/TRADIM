@@ -13,81 +13,33 @@ class ProcessVideo implements ShouldQueue
 {
     use Queueable;
 
-    /*
-    |--------------------------------------------------------------------------
-    | Queue Configuration
-    |--------------------------------------------------------------------------
-    */
-
     public int $tries = 3;
 
     public int $timeout = 3600;
 
-    public array $backoff = [
-        10,
-        30,
-        60,
-    ];
-
-    /*
-    |--------------------------------------------------------------------------
-    | Constructor
-    |--------------------------------------------------------------------------
-    */
+    public array $backoff = [10, 30, 60];
 
     public function __construct(
         public int $videoId
     ) {
-        /*
-        |--------------------------------------------------------------------------
-        | Dedicated Redis Connection
-        |--------------------------------------------------------------------------
-        */
-
         $this->onConnection('redis_video');
-
-        /*
-        |--------------------------------------------------------------------------
-        | Dedicated Video Processing Queue
-        |--------------------------------------------------------------------------
-        */
 
         $this->onQueue(
             config(
                 'tradim.queues.video',
-                'video-processing'
+                'processing'
             )
         );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Dispatch After Database Commit
-        |--------------------------------------------------------------------------
-        */
 
         $this->afterCommit();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Handle Job
-    |--------------------------------------------------------------------------
-    */
-
     public function handle(
         VideoProcessingService $processingService
     ): void {
-        $video = Video::query()
-            ->find($this->videoId);
-
-        /*
-        |--------------------------------------------------------------------------
-        | Video Not Found
-        |--------------------------------------------------------------------------
-        */
+        $video = Video::query()->find($this->videoId);
 
         if (!$video) {
-
             Log::warning(
                 'Video not found for processing',
                 [
@@ -99,16 +51,20 @@ class ProcessVideo implements ShouldQueue
             return;
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Skip Already Completed Video
-        |--------------------------------------------------------------------------
-        */
-
         if ($video->status === 'ready') {
-
             Log::info(
                 'Video processing skipped because video is already ready',
+                [
+                    'video_id' => $video->id,
+                ]
+            );
+
+            return;
+        }
+
+        if ($video->status === 'published') {
+            Log::info(
+                'Video processing skipped because video is already published',
                 [
                     'video_id' => $video->id,
                 ]
@@ -127,14 +83,7 @@ class ProcessVideo implements ShouldQueue
             ]
         );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Processing
-        |--------------------------------------------------------------------------
-        */
-
         try {
-
             $processingService->process($video);
 
             Log::info(
@@ -144,9 +93,7 @@ class ProcessVideo implements ShouldQueue
                     'attempt' => $this->attempts(),
                 ]
             );
-
         } catch (Throwable $exception) {
-
             Log::error(
                 'Video processing attempt failed',
                 [
@@ -159,30 +106,13 @@ class ProcessVideo implements ShouldQueue
                 ]
             );
 
-            /*
-            |--------------------------------------------------------------------------
-            | Re-throw
-            |--------------------------------------------------------------------------
-            |
-            | Laravel needs the exception so that the queue worker
-            | can retry the job according to $tries and $backoff.
-            |
-            */
-
             throw $exception;
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Permanently Failed
-    |--------------------------------------------------------------------------
-    */
-
     public function failed(
         Throwable $exception
     ): void {
-
         Video::query()
             ->whereKey($this->videoId)
             ->update([

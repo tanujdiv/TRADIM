@@ -33,8 +33,16 @@ class ProcessVideoJobTest extends TestCase
         $job = new ProcessVideo(999);
 
         $this->assertSame(3, $job->tries);
-        $this->assertSame(3600, $job->timeout);
-        $this->assertSame([10, 30, 60], $job->backoff);
+
+        $this->assertSame(
+            3600,
+            $job->timeout
+        );
+
+        $this->assertSame(
+            [10, 30, 60],
+            $job->backoff
+        );
     }
 
     public function test_video_job_can_be_dispatched(): void
@@ -48,7 +56,9 @@ class ProcessVideoJobTest extends TestCase
             function (ProcessVideo $job) {
                 return $job->videoId === 999
                     && $job->connection === 'redis_video'
-                    && $job->queue === config('tradim.queues.video');
+                    && $job->queue === config(
+                        'tradim.queues.video'
+                    );
             }
         );
     }
